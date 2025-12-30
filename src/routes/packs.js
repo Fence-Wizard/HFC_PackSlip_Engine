@@ -119,7 +119,7 @@ router.post("/packs/:id/reparse", async (req, res) => {
       updatedAt: now(),
       status: STATUSES.REVIEW,
     });
-    return res.status(500).json(toApiModel(updated));
+    return res.json(toApiModel(updated));
   }
 });
 

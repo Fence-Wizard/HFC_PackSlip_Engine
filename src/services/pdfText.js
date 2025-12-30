@@ -1,4 +1,4 @@
-const { getDocument, PDFDataRangeTransport } = require("pdfjs-dist");
+const pdfjsLegacy = require("pdfjs-dist/legacy/build/pdf.js");
 
 let pdfParseFn = null;
 
@@ -24,17 +24,6 @@ function tryLoadPdfParse() {
     console.error("pdf-parse main require failed:", err?.message);
   }
 
-  // Try direct path to lib/pdf-parse (commonjs bundle)
-  try {
-    const mod = require("pdf-parse/lib/pdf-parse");
-    if (typeof mod === "function") return mod;
-    if (mod && typeof mod.default === "function") return mod.default;
-    logShape("cjs-lib", mod);
-  } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error("pdf-parse lib require failed:", err?.message);
-  }
-
   return null;
 }
 
@@ -46,10 +35,10 @@ async function resolvePdfParse() {
     return pdfParseFn;
   }
 
-  // Fallback: minimal text extractor using pdfjs-dist
+  // Fallback: minimal text extractor using pdfjs-dist legacy build
   pdfParseFn = async (buffer) => {
     const data = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
-    const doc = await getDocument({ data }).promise;
+    const doc = await pdfjsLegacy.getDocument({ data }).promise;
     let text = "";
     for (let i = 1; i <= doc.numPages; i += 1) {
       // eslint-disable-next-line no-await-in-loop
@@ -62,7 +51,7 @@ async function resolvePdfParse() {
     return { text, numpages: doc.numPages };
   };
   // eslint-disable-next-line no-console
-  console.error("pdf-parse not callable; using pdfjs-dist fallback");
+  console.error("pdf-parse not callable; using pdfjs-dist legacy fallback");
   return pdfParseFn;
 }
 
