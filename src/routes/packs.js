@@ -2,6 +2,9 @@ const express = require("express");
 const db = require("../storage/db");
 const { STATUSES, now } = require("../models/PackSlip");
 const { sendToN8n } = require("../services/webhook");
+const { extractText } = require("../services/extractText");
+const { parsePackSlip } = require("../services/parsePackSlip");
+const { readFileBuffer } = require("../storage/files");
 const logger = require("../config/logger");
 
 const router = express.Router();
@@ -77,6 +80,46 @@ router.post("/packs/:id/submit", async (req, res) => {
   } catch (err) {
     logger.warn("Webhook dispatch failed on /packs submit", { reqId, message: err?.message });
     return res.json({ ok: true, n8nStatus: "failed", slackStatus: "via n8n" });
+  }
+});
+
+router.post("/packs/:id/reparse", async (req, res) => {
+  const reqId = req.id;
+  const pack = db.getPackSlip(req.params.id);
+  if (!pack) return res.status(404).json({ error: "Not found" });
+  if (!pack.file?.storedPath) {
+    return res.status(400).json({ error: "Original file is unavailable for re-parse" });
+  }
+
+  try {
+    const buffer = readFileBuffer(pack.file);
+    const extraction = await extractText(
+      { buffer, mimeType: pack.file.mimeType, fileName: pack.file.originalName },
+      reqId,
+    );
+    const lineItems = parsePackSlip(extraction.text);
+    const updated = db.updatePackSlip(pack.id, {
+      extractedText: extraction.text,
+      extractMeta: {
+        method: extraction.method,
+        pages: extraction.pages,
+      },
+      lineItems,
+      updatedAt: now(),
+      status: STATUSES.REVIEW,
+      errors: [],
+    });
+    return res.json(toApiModel(updated));
+  } catch (err) {
+    logger.error("Reparse failed", { reqId, message: err?.message, stack: err?.stack });
+    const updated = db.updatePackSlip(pack.id, {
+      extractedText: "(reparse failed)",
+      extractMeta: { method: "failed", pages: 0 },
+      errors: [err?.message || "Reparse failed"],
+      updatedAt: now(),
+      status: STATUSES.REVIEW,
+    });
+    return res.status(500).json(toApiModel(updated));
   }
 });
 

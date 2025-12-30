@@ -245,7 +245,19 @@
     });
 
     autoParseBtn.addEventListener("click", async () => {
-      toast("Best-effort parse is a server feature. Implement /api/packs/:id/reparse to enable.", "info", 5000);
+      if (!id) return toast("Missing id", "error");
+      autoParseBtn.disabled = true;
+      autoParseBtn.textContent = "Parsing…";
+      try {
+        const updated = await apiPost(`/api/packs/${encodeURIComponent(id)}/reparse`, {});
+        hydrate(updated);
+        toast("Re-parse complete.", "success");
+      } catch (e) {
+        // toast handled in api.js
+      } finally {
+        autoParseBtn.disabled = false;
+        autoParseBtn.textContent = "Re-run best-effort parse";
+      }
     });
 
     copyTextBtn.addEventListener("click", async () => {
