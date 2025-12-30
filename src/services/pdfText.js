@@ -1,78 +1,55 @@
 let pdfParseFn = null;
 
-function logShape(label, mod) {
-  try {
-    // eslint-disable-next-line no-console
-    console.error(`pdf-parse export shape (${label}):`, mod ? Object.keys(mod) : "null");
-  } catch {
-    // ignore
-  }
-}
+async function resolvePdfParse() {
+  if (pdfParseFn) return pdfParseFn;
 
-function tryLoadPdfParse() {
-  // Try main entry
+  // Try pdf-parse first
   try {
     const mod = require("pdf-parse");
     const candidates = [mod, mod?.default, mod?.default?.default];
     const found = candidates.find((fn) => typeof fn === "function");
-    if (found) return found;
-    logShape("cjs-main", mod);
+    if (found) {
+      // eslint-disable-next-line no-console
+      console.log("✓ Using pdf-parse");
+      pdfParseFn = found;
+      return pdfParseFn;
+    }
+    // eslint-disable-next-line no-console
+    console.log("pdf-parse exports:", Object.keys(mod || {}));
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.error("pdf-parse main require failed:", err?.message);
+    console.log("pdf-parse not available:", err?.message);
   }
 
-  return null;
-}
-
-function loadPdfjsLegacy() {
-  const candidates = [
-    "pdfjs-dist/legacy/build/pdf.js",
-    "pdfjs-dist/legacy/build/pdf",
-  ];
-  for (const modPath of candidates) {
-    try {
-      // eslint-disable-next-line import/no-dynamic-require, global-require
-      return require(modPath);
-    } catch (err) {
-      // try next
-    }
-  }
+  // Fallback to pdfjs-dist using dynamic import (ESM)
   // eslint-disable-next-line no-console
-  console.error("pdfjs-dist legacy build not found; tried", candidates);
-  return null;
-}
-
-async function resolvePdfParse() {
-  if (pdfParseFn) return pdfParseFn;
-  const loaded = tryLoadPdfParse();
-  if (loaded) {
-    pdfParseFn = loaded;
+  console.log("Using pdfjs-dist fallback...");
+  
+  try {
+    const pdfjsLib = await import("pdfjs-dist");
+    pdfParseFn = async (buffer) => {
+      const data = new Uint8Array(buffer);
+      const loadingTask = pdfjsLib.getDocument({ data });
+      const pdfDoc = await loadingTask.promise;
+      let fullText = "";
+      for (let i = 1; i <= pdfDoc.numPages; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
+        const page = await pdfDoc.getPage(i);
+        // eslint-disable-next-line no-await-in-loop
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map((item) => item.str).join(" ");
+        fullText += `${pageText}\n`;
+      }
+      return { text: fullText.trim(), numpages: pdfDoc.numPages };
+    };
+    // eslint-disable-next-line no-console
+    console.log("✓ pdfjs-dist loaded successfully");
     return pdfParseFn;
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error("pdfjs-dist fallback failed:", err?.message);
+    throw new Error("No PDF parser available");
   }
-
-  // Fallback: minimal text extractor using pdfjs-dist legacy build
-  pdfParseFn = async (buffer) => {
-    const pdfjsLegacy = loadPdfjsLegacy();
-    if (!pdfjsLegacy || !pdfjsLegacy.getDocument) {
-      throw new Error("pdfjs-dist legacy build unavailable");
-    }
-    const data = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
-    const doc = await pdfjsLegacy.getDocument({ data }).promise;
-    let text = "";
-    for (let i = 1; i <= doc.numPages; i += 1) {
-      // eslint-disable-next-line no-await-in-loop
-      const page = await doc.getPage(i);
-      // eslint-disable-next-line no-await-in-loop
-      const content = await page.getTextContent();
-      const str = content.items.map((it) => it.str || "").join(" ");
-      text += `${str}\n`;
-    }
-    return { text, numpages: doc.numPages };
-  };
-  // eslint-disable-next-line no-console
-  console.error("pdf-parse not callable; using pdfjs-dist legacy fallback");
-  return pdfParseFn;
 }
 
 async function extractPdfText(buffer) {
