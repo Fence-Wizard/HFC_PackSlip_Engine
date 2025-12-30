@@ -6,14 +6,33 @@ async function resolvePdfParse() {
   // Try pdf-parse first
   try {
     const mod = require("pdf-parse");
+    
+    // Check for v1.x style callable
     const candidates = [mod, mod?.default, mod?.default?.default];
     const found = candidates.find((fn) => typeof fn === "function");
     if (found) {
       // eslint-disable-next-line no-console
-      console.log("✓ Using pdf-parse");
+      console.log("✓ Using pdf-parse (v1 style)");
       pdfParseFn = found;
       return pdfParseFn;
     }
+    
+    // Check for v2.x PDFParse class
+    if (mod?.PDFParse && typeof mod.PDFParse === "function") {
+      // eslint-disable-next-line no-console
+      console.log("✓ Using pdf-parse v2 PDFParse class");
+      const PDFParseClass = mod.PDFParse;
+      pdfParseFn = async (buffer) => {
+        const parser = new PDFParseClass();
+        const result = await parser.parse(buffer);
+        return {
+          text: result?.text || "",
+          numpages: result?.numPages || result?.numpages || result?.pages || 0,
+        };
+      };
+      return pdfParseFn;
+    }
+    
     // eslint-disable-next-line no-console
     console.log("pdf-parse exports:", Object.keys(mod || {}));
   } catch (err) {
