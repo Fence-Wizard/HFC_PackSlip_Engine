@@ -1,6 +1,7 @@
 const { createRequire } = require("module");
 
-const require = createRequire(__filename);
+// Avoid shadowing the global require to prevent TDZ issues
+const req = typeof createRequire === "function" ? createRequire(__filename) : require;
 
 let pdfParseFn = null;
 
@@ -9,7 +10,7 @@ async function resolvePdfParse() {
 
   // Try CommonJS require
   try {
-    const mod = require("pdf-parse");
+    const mod = req("pdf-parse");
     if (typeof mod === "function") {
       pdfParseFn = mod;
       return pdfParseFn;
