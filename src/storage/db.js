@@ -1,24 +1,33 @@
 const fs = require("fs");
 const path = require("path");
-const { config } = require("../config/env");
+const { config, loadConfig } = require("../config/env");
 
-const DB_PATH = path.join(config.dataDir, "packslips.json");
+function getDbPath() {
+  if (!config.dataDir) {
+    loadConfig();
+  }
+  return path.join(config.dataDir, "packslips.json");
+}
 
 function ensureDbFile() {
-  if (!fs.existsSync(DB_PATH)) {
+  const dbPath = getDbPath();
+  fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+  if (!fs.existsSync(dbPath)) {
     const initial = { packSlips: [] };
-    fs.writeFileSync(DB_PATH, JSON.stringify(initial, null, 2));
+    fs.writeFileSync(dbPath, JSON.stringify(initial, null, 2));
   }
 }
 
 function loadDb() {
   ensureDbFile();
-  const raw = fs.readFileSync(DB_PATH, "utf8");
+  const dbPath = getDbPath();
+  const raw = fs.readFileSync(dbPath, "utf8");
   return JSON.parse(raw);
 }
 
 function saveDb(db) {
-  fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
+  const dbPath = getDbPath();
+  fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
 }
 
 function createPackSlip(record) {
