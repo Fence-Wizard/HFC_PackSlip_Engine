@@ -1,0 +1,170 @@
+{
+  "packSlips": [
+    {
+      "id": "cfdeb5c0-33ac-434d-aadd-b6e4c82b8838",
+      "status": "failed",
+      "file": {
+        "originalName": "2511025-1 Merchants Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 55472,
+        "storedPath": "C:\\Users\\SOwens\\AppData\\Local\\Temp\\1767126700677-705905.pdf",
+        "fileName": "1767126700677-705905.pdf",
+        "publicUrl": "http://localhost:3030/files/1767126700677-705905.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdfParse is not a function"
+      ],
+      "createdAt": "2025-12-30T20:31:40.679Z",
+      "updatedAt": "2025-12-30T20:31:40.681Z",
+      "submittedAt": null
+    },
+    {
+      "id": "cd424221-5a47-414e-81d1-804643cc0030",
+      "status": "failed",
+      "file": {
+        "originalName": "2511025-1 Merchants Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 55472,
+        "storedPath": "C:\\Users\\SOwens\\AppData\\Local\\Temp\\1767126717014-583511.pdf",
+        "fileName": "1767126717014-583511.pdf",
+        "publicUrl": "http://localhost:3030/files/1767126717014-583511.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdfParse is not a function"
+      ],
+      "createdAt": "2025-12-30T20:31:57.016Z",
+      "updatedAt": "2025-12-30T20:31:57.019Z",
+      "submittedAt": null
+    },
+    {
+      "id": "dcbe3227-5dbf-444d-8df6-48d6fe23df5c",
+      "status": "failed",
+      "file": {
+        "originalName": "2511025-1 Merchants Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 55472,
+        "storedPath": "C:\\Users\\SOwens\\AppData\\Local\\Temp\\1767126730234-14390.pdf",
+        "fileName": "1767126730234-14390.pdf",
+        "publicUrl": "http://localhost:3030/files/1767126730234-14390.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdfParse is not a function"
+      ],
+      "createdAt": "2025-12-30T20:32:10.236Z",
+      "updatedAt": "2025-12-30T20:32:10.238Z",
+      "submittedAt": null
+    },
+    {
+      "id": "5f66a6f3-6f35-4358-ba7c-40b69eb9c7f3",
+      "status": "failed",
+      "file": {
+        "originalName": "2511025-1 Merchants Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 55472,
+        "storedPath": "C:\\Users\\SOwens\\AppData\\Local\\Temp\\1767126950050-615139.pdf",
+        "fileName": "1767126950050-615139.pdf",
+        "publicUrl": "http://localhost:3030/files/1767126950050-615139.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdfParse is not a function"
+      ],
+      "createdAt": "2025-12-30T20:35:50.055Z",
+      "updatedAt": "2025-12-30T20:35:50.059Z",
+      "submittedAt": null
+    },
+    {
+      "id": "ea4575fc-251b-45cc-9cde-8c7397f9ae8a",
+      "status": "failed",
+      "file": {
+        "originalName": "2511025-1 Merchants Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 55472,
+        "storedPath": "C:\\Users\\SOwens\\AppData\\Local\\Temp\\1767126960148-154411.pdf",
+        "fileName": "1767126960148-154411.pdf",
+        "publicUrl": "http://localhost:3030/files/1767126960148-154411.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdfParse is not a function"
+      ],
+      "createdAt": "2025-12-30T20:36:00.150Z",
+      "updatedAt": "2025-12-30T20:36:00.156Z",
+      "submittedAt": null
+    },
+    {
+      "id": "d7f04cd3-d229-4ea5-b248-3c4a3b630ea3",
+      "status": "failed",
+      "file": {
+        "originalName": "2511025-1 Merchants Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 55472,
+        "storedPath": "C:\\Users\\SOwens\\AppData\\Local\\Temp\\1767127102093-430512.pdf",
+        "fileName": "1767127102093-430512.pdf",
+        "publicUrl": "http://localhost:3030/files/1767127102093-430512.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T20:38:22.097Z",
+      "updatedAt": "2025-12-30T20:38:22.101Z",
+      "submittedAt": null
+    },
+    {
+      "id": "a1c3a0ac-2c5d-4075-8d55-e13ba1a4a3af",
+      "status": "failed",
+      "file": {
+        "originalName": "2511025-1 Merchants Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 55472,
+        "storedPath": "C:\\Users\\SOwens\\AppData\\Local\\Temp\\1767127108496-336408.pdf",
+        "fileName": "1767127108496-336408.pdf",
+        "publicUrl": "http://localhost:3030/files/1767127108496-336408.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T20:38:28.499Z",
+      "updatedAt": "2025-12-30T20:38:28.503Z",
+      "submittedAt": null
+    },
+    {
+      "id": "316500d5-d971-4d06-8b65-9c48a96ad233",
+      "status": "uploaded",
+      "file": {
+        "originalName": "sample.png",
+        "mimeType": "image/png",
+        "size": 85,
+        "storedPath": "C:\\Users\\SOwens\\AppData\\Local\\Temp\\1767127587322-94890.png",
+        "fileName": "1767127587322-94890.png",
+        "publicUrl": "http://localhost:3030/files/1767127587322-94890.png"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [],
+      "createdAt": "2025-12-30T20:46:27.323Z",
+      "updatedAt": "2025-12-30T20:46:27.323Z",
+      "submittedAt": null
+    }
+  ]
+}
