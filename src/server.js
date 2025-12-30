@@ -21,6 +21,23 @@ fs.mkdirSync(config.uploadDir, { recursive: true });
 const app = express();
 
 app.use(requestId);
+
+// Simple request logger
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    logger.info("http", {
+      reqId: req.id,
+      method: req.method,
+      path: req.originalUrl,
+      status: res.statusCode,
+      durationMs: duration,
+    });
+  });
+  next();
+});
+
 app.use(express.json({ limit: "2mb" }));
 
 // Serve static UI assets
@@ -42,7 +59,6 @@ app.get("/", (req, res) => res.redirect("/upload.html"));
 app.use(errorHandler);
 
 app.listen(config.port, () => {
-  logger.info(`Server running on ${config.baseUrl}`);
-  logger.info("Upload UI available at /upload.html");
+  logger.info(`UI: ${config.baseUrl}/upload.html`);
 });
 

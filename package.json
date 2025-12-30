@@ -4,6 +4,7 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -23,6 +24,9 @@
     "sharp": "^0.34.5",
     "tesseract.js": "^7.0.0",
     "uuid": "^11.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
   },
   "description": ""
 }
