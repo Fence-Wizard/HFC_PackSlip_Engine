@@ -1,5 +1,3 @@
-const pdfjsLegacy = require("pdfjs-dist/legacy/build/pdf.js");
-
 let pdfParseFn = null;
 
 function logShape(label, mod) {
@@ -27,6 +25,24 @@ function tryLoadPdfParse() {
   return null;
 }
 
+function loadPdfjsLegacy() {
+  const candidates = [
+    "pdfjs-dist/legacy/build/pdf.js",
+    "pdfjs-dist/legacy/build/pdf",
+  ];
+  for (const modPath of candidates) {
+    try {
+      // eslint-disable-next-line import/no-dynamic-require, global-require
+      return require(modPath);
+    } catch (err) {
+      // try next
+    }
+  }
+  // eslint-disable-next-line no-console
+  console.error("pdfjs-dist legacy build not found; tried", candidates);
+  return null;
+}
+
 async function resolvePdfParse() {
   if (pdfParseFn) return pdfParseFn;
   const loaded = tryLoadPdfParse();
@@ -37,6 +53,10 @@ async function resolvePdfParse() {
 
   // Fallback: minimal text extractor using pdfjs-dist legacy build
   pdfParseFn = async (buffer) => {
+    const pdfjsLegacy = loadPdfjsLegacy();
+    if (!pdfjsLegacy || !pdfjsLegacy.getDocument) {
+      throw new Error("pdfjs-dist legacy build unavailable");
+    }
     const data = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
     const doc = await pdfjsLegacy.getDocument({ data }).promise;
     let text = "";
