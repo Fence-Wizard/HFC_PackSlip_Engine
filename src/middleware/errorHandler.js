@@ -3,7 +3,7 @@ const logger = require("../config/logger");
 module.exports = function errorHandler(err, req, res, next) {
   // Log to console for visibility in dev
   // eslint-disable-next-line no-console
-  console.error(err);
+  console.error("UNHANDLED ERROR:", err);
   logger.error("Unhandled error", {
     reqId: req?.id,
     message: err?.message,

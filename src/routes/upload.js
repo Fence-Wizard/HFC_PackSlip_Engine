@@ -34,12 +34,30 @@ router.post("/upload", upload.single("file"), async (req, res, next) => {
 
   try {
     const buffer = readFileBuffer(fileRecord);
-    const extraction = await extractText(
-      { buffer, mimeType: fileRecord.mimeType, fileName: fileRecord.originalName },
-      reqId,
-    );
+    let extraction = {
+      text: "",
+      method: "skip",
+      pages: 0,
+    };
+    try {
+      extraction = await extractText(
+        { buffer, mimeType: fileRecord.mimeType, fileName: fileRecord.originalName },
+        reqId,
+      );
+    } catch (err) {
+      logger.error("Extraction failed, continuing without text", {
+        reqId,
+        message: err?.message,
+        stack: err?.stack,
+      });
+      extraction = {
+        text: "(extraction failed)",
+        method: "failed",
+        pages: 0,
+      };
+    }
 
-    const extracted = db.updatePackSlip(packSlip.id, {
+    db.updatePackSlip(packSlip.id, {
       status: STATUSES.EXTRACTED,
       extractedText: extraction.text,
       extractMeta: {
@@ -71,9 +89,7 @@ router.post("/upload", upload.single("file"), async (req, res, next) => {
       status: STATUSES.FAILED,
       errors: [err?.message || "Processing failed"],
     });
-    return res
-      .status(500)
-      .json({ error: `PDF extraction failed: ${err?.message || "Processing failed"}` });
+    return res.status(500).json({ error: err?.message || "Processing failed" });
   }
 });
 

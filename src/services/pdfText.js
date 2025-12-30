@@ -11,6 +11,21 @@ async function resolvePdfParse() {
   // Try CommonJS require
   try {
     const mod = req("pdf-parse");
+    const candidates = [mod, mod?.default, mod?.default?.default];
+    const found = candidates.find((fn) => typeof fn === "function");
+    if (found) {
+      pdfParseFn = found;
+      return pdfParseFn;
+    }
+    // eslint-disable-next-line no-console
+    console.error("pdf-parse export shape (cjs):", Object.keys(mod || {}));
+  } catch (err) {
+    // fall through to ESM import
+  }
+
+  // Try dynamic ESM import
+  try {
+    const mod = await import("pdf-parse");
     if (typeof mod === "function") {
       pdfParseFn = mod;
       return pdfParseFn;
@@ -19,19 +34,15 @@ async function resolvePdfParse() {
       pdfParseFn = mod.default;
       return pdfParseFn;
     }
+    if (mod && typeof mod.default?.default === "function") {
+      pdfParseFn = mod.default.default;
+      return pdfParseFn;
+    }
+    // eslint-disable-next-line no-console
+    console.error("pdf-parse export shape (esm):", Object.keys(mod || {}));
   } catch (err) {
-    // fall through to ESM import
-  }
-
-  // Try dynamic ESM import
-  const mod = await import("pdf-parse");
-  if (mod && typeof mod.default === "function") {
-    pdfParseFn = mod.default;
-    return pdfParseFn;
-  }
-  if (typeof mod === "function") {
-    pdfParseFn = mod;
-    return pdfParseFn;
+    // eslint-disable-next-line no-console
+    console.error("pdf-parse dynamic import failed:", err?.message);
   }
 
   throw new Error("pdf-parse export not found");
