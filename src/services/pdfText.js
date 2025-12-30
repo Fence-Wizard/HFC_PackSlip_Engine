@@ -1,6 +1,7 @@
 /**
  * PDF text extraction using pdfjs-dist directly.
  * This avoids pdf-parse v2.x constructor issues.
+ * Preserves line breaks based on Y-coordinates for table extraction.
  */
 
 let pdfjsLib = null;
@@ -63,7 +64,54 @@ async function loadPdfjs() {
 }
 
 /**
+ * Extract text from a single page, preserving line structure.
+ * Groups text items by Y-coordinate to maintain rows.
+ */
+function extractPageTextWithLines(content) {
+  if (!content.items || content.items.length === 0) return "";
+
+  // Group items by their Y-coordinate (with tolerance for slight variations)
+  const LINE_TOLERANCE = 3; // pixels
+  const lines = [];
+
+  for (const item of content.items) {
+    if (!item.str || !item.str.trim()) continue;
+
+    // Get Y coordinate from transform matrix [a, b, c, d, e, f] where f is Y
+    const y = item.transform ? item.transform[5] : 0;
+    const x = item.transform ? item.transform[4] : 0;
+
+    // Find existing line with similar Y
+    let foundLine = null;
+    for (const line of lines) {
+      if (Math.abs(line.y - y) <= LINE_TOLERANCE) {
+        foundLine = line;
+        break;
+      }
+    }
+
+    if (foundLine) {
+      foundLine.items.push({ x, text: item.str });
+    } else {
+      lines.push({ y, items: [{ x, text: item.str }] });
+    }
+  }
+
+  // Sort lines by Y (descending - PDF coordinates have origin at bottom)
+  lines.sort((a, b) => b.y - a.y);
+
+  // For each line, sort items by X (left to right) and join
+  const textLines = lines.map((line) => {
+    line.items.sort((a, b) => a.x - b.x);
+    return line.items.map((i) => i.text).join(" ").trim();
+  });
+
+  return textLines.filter(Boolean).join("\n");
+}
+
+/**
  * Extract text from a PDF buffer using pdfjs-dist directly.
+ * Preserves line breaks based on Y-coordinates for better table extraction.
  * @param {Buffer} buffer - Node.js Buffer containing PDF data
  * @returns {Promise<{text: string, pageCount: number}>}
  */
@@ -98,12 +146,8 @@ async function extractPdfText(buffer) {
     // eslint-disable-next-line no-await-in-loop
     const content = await page.getTextContent();
 
-    // Extract text items and join with spaces
-    const pageText = content.items
-      .map((item) => item.str || "")
-      .join(" ")
-      .replace(/\s+/g, " ")
-      .trim();
+    // Extract text with line preservation
+    const pageText = extractPageTextWithLines(content);
 
     if (pageText) {
       textParts.push(pageText);
@@ -111,7 +155,7 @@ async function extractPdfText(buffer) {
   }
 
   return {
-    text: textParts.join("\n").trim(),
+    text: textParts.join("\n\n").trim(),
     pageCount: numPages,
   };
 }
