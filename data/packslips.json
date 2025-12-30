@@ -165,6 +165,714 @@
       "createdAt": "2025-12-30T20:46:27.323Z",
       "updatedAt": "2025-12-30T20:46:27.323Z",
       "submittedAt": null
+    },
+    {
+      "id": "b515a0ba-6515-4961-9d90-1deeb66380e1",
+      "status": "failed",
+      "file": {
+        "originalName": "2511025-1 Merchants Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 55472,
+        "storedPath": "data\\uploads\\1767128159694-69aaac29-b8da-4fde-9e99-cc8b128a24b2.pdf",
+        "fileName": "1767128159694-69aaac29-b8da-4fde-9e99-cc8b128a24b2.pdf",
+        "publicUrl": "http://localhost:3030/files/1767128159694-69aaac29-b8da-4fde-9e99-cc8b128a24b2.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T20:55:59.695Z",
+      "updatedAt": "2025-12-30T20:55:59.698Z",
+      "submittedAt": null
+    },
+    {
+      "id": "296fe0b7-cffb-49d8-814e-528d27139030",
+      "status": "failed",
+      "file": {
+        "originalName": "2511025-1 Merchants Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 55472,
+        "storedPath": "data\\uploads\\1767128164832-f6f44697-f7c9-4425-aad4-4a4c3289d04c.pdf",
+        "fileName": "1767128164832-f6f44697-f7c9-4425-aad4-4a4c3289d04c.pdf",
+        "publicUrl": "http://localhost:3030/files/1767128164832-f6f44697-f7c9-4425-aad4-4a4c3289d04c.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T20:56:04.834Z",
+      "updatedAt": "2025-12-30T20:56:04.837Z",
+      "submittedAt": null
+    },
+    {
+      "id": "f83a0317-c68e-4223-a4b8-3f88f52f5830",
+      "status": "failed",
+      "file": {
+        "originalName": "2511025-1 Merchants Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 55472,
+        "storedPath": "data\\uploads\\1767128173133-603bdc80-8b17-4174-911b-823c92428879.pdf",
+        "fileName": "1767128173133-603bdc80-8b17-4174-911b-823c92428879.pdf",
+        "publicUrl": "http://localhost:3030/files/1767128173133-603bdc80-8b17-4174-911b-823c92428879.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T20:56:13.137Z",
+      "updatedAt": "2025-12-30T20:56:13.139Z",
+      "submittedAt": null
+    },
+    {
+      "id": "cbc5b476-3afc-4bad-8e16-77a8e016e548",
+      "status": "failed",
+      "file": {
+        "originalName": "2511025-1 Merchants Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 55472,
+        "storedPath": "data\\uploads\\1767128553681-9caf8377-cfa6-416c-9ded-9654cc72271a.pdf",
+        "fileName": "1767128553681-9caf8377-cfa6-416c-9ded-9654cc72271a.pdf",
+        "publicUrl": "http://localhost:3030/files/1767128553681-9caf8377-cfa6-416c-9ded-9654cc72271a.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T21:02:33.682Z",
+      "updatedAt": "2025-12-30T21:02:33.683Z",
+      "submittedAt": null
+    },
+    {
+      "id": "286501ab-6533-40da-a09a-f94745d23f98",
+      "status": "failed",
+      "file": {
+        "originalName": "2511025-1 Merchants Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 55472,
+        "storedPath": "data\\uploads\\1767128572327-7cfa3f58-c225-4966-98a2-c63a35c2f028.pdf",
+        "fileName": "1767128572327-7cfa3f58-c225-4966-98a2-c63a35c2f028.pdf",
+        "publicUrl": "http://localhost:3030/files/1767128572327-7cfa3f58-c225-4966-98a2-c63a35c2f028.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T21:02:52.330Z",
+      "updatedAt": "2025-12-30T21:02:52.340Z",
+      "submittedAt": null
+    },
+    {
+      "id": "b111d905-fc73-4743-a60a-bf567e3e169f",
+      "status": "failed",
+      "file": {
+        "originalName": "2512020-2 SPS Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 129538,
+        "storedPath": "data\\uploads\\1767128591897-9589c36d-7e57-4ffe-be56-ff9a8a6f9779.pdf",
+        "fileName": "1767128591897-9589c36d-7e57-4ffe-be56-ff9a8a6f9779.pdf",
+        "publicUrl": "http://localhost:3030/files/1767128591897-9589c36d-7e57-4ffe-be56-ff9a8a6f9779.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T21:03:11.900Z",
+      "updatedAt": "2025-12-30T21:03:11.905Z",
+      "submittedAt": null
+    },
+    {
+      "id": "f6894fc4-351c-4417-ab86-8691764cc651",
+      "status": "failed",
+      "file": {
+        "originalName": "2512020-2 SPS Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 129538,
+        "storedPath": "data\\uploads\\1767128598803-ba9b59cb-bc4d-49a2-8072-4205c0adb217.pdf",
+        "fileName": "1767128598803-ba9b59cb-bc4d-49a2-8072-4205c0adb217.pdf",
+        "publicUrl": "http://localhost:3030/files/1767128598803-ba9b59cb-bc4d-49a2-8072-4205c0adb217.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T21:03:18.806Z",
+      "updatedAt": "2025-12-30T21:03:18.808Z",
+      "submittedAt": null
+    },
+    {
+      "id": "3b1865ca-ab2e-4fb9-abdb-dbc34838a8b6",
+      "status": "failed",
+      "file": {
+        "originalName": "2512020-2 SPS Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 129538,
+        "storedPath": "data\\uploads\\1767129699644-890f54b2-c80d-479a-82f2-3b2aa66d6fee.pdf",
+        "fileName": "1767129699644-890f54b2-c80d-479a-82f2-3b2aa66d6fee.pdf",
+        "publicUrl": "http://localhost:3030/files/1767129699644-890f54b2-c80d-479a-82f2-3b2aa66d6fee.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T21:21:39.645Z",
+      "updatedAt": "2025-12-30T21:21:39.648Z",
+      "submittedAt": null
+    },
+    {
+      "id": "1df51693-a146-4b61-b7c3-3629bd0cbf34",
+      "status": "failed",
+      "file": {
+        "originalName": "2512020-2 SPS Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 129538,
+        "storedPath": "data\\uploads\\1767129763829-d5820260-1116-4b6e-935e-8061620962cc.pdf",
+        "fileName": "1767129763829-d5820260-1116-4b6e-935e-8061620962cc.pdf",
+        "publicUrl": "http://localhost:3030/files/1767129763829-d5820260-1116-4b6e-935e-8061620962cc.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T21:22:43.831Z",
+      "updatedAt": "2025-12-30T21:22:43.833Z",
+      "submittedAt": null
+    },
+    {
+      "id": "8ccea390-7e73-4a7f-a985-dc00f8aeb2f3",
+      "status": "failed",
+      "file": {
+        "originalName": "2512020-2 SPS Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 129538,
+        "storedPath": "data\\uploads\\1767129765354-8b7eb86e-61ce-4b9f-a1ae-13b792e02c23.pdf",
+        "fileName": "1767129765354-8b7eb86e-61ce-4b9f-a1ae-13b792e02c23.pdf",
+        "publicUrl": "http://localhost:3030/files/1767129765354-8b7eb86e-61ce-4b9f-a1ae-13b792e02c23.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T21:22:45.356Z",
+      "updatedAt": "2025-12-30T21:22:45.358Z",
+      "submittedAt": null
+    },
+    {
+      "id": "be1e4a42-6821-4ab4-a30f-4a4170e0d450",
+      "status": "failed",
+      "file": {
+        "originalName": "2512020-2 SPS Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 129538,
+        "storedPath": "data\\uploads\\1767129766097-238e9280-4f15-4647-9832-743a69032d04.pdf",
+        "fileName": "1767129766097-238e9280-4f15-4647-9832-743a69032d04.pdf",
+        "publicUrl": "http://localhost:3030/files/1767129766097-238e9280-4f15-4647-9832-743a69032d04.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T21:22:46.099Z",
+      "updatedAt": "2025-12-30T21:22:46.104Z",
+      "submittedAt": null
+    },
+    {
+      "id": "f4fb02dc-c588-4fe4-9f4f-cf68bd9d93e5",
+      "status": "failed",
+      "file": {
+        "originalName": "2512020-2 SPS Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 129538,
+        "storedPath": "data\\uploads\\1767129766492-627556ed-e3f4-4644-bf6f-c05f4ff7f968.pdf",
+        "fileName": "1767129766492-627556ed-e3f4-4644-bf6f-c05f4ff7f968.pdf",
+        "publicUrl": "http://localhost:3030/files/1767129766492-627556ed-e3f4-4644-bf6f-c05f4ff7f968.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T21:22:46.493Z",
+      "updatedAt": "2025-12-30T21:22:46.496Z",
+      "submittedAt": null
+    },
+    {
+      "id": "b2c87cc1-6d1e-4615-805c-fb610b40e5c2",
+      "status": "failed",
+      "file": {
+        "originalName": "2512020-2 SPS Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 129538,
+        "storedPath": "data\\uploads\\1767129766703-5e28423b-b604-4aa8-8e8d-e1ec4d85f48d.pdf",
+        "fileName": "1767129766703-5e28423b-b604-4aa8-8e8d-e1ec4d85f48d.pdf",
+        "publicUrl": "http://localhost:3030/files/1767129766703-5e28423b-b604-4aa8-8e8d-e1ec4d85f48d.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T21:22:46.706Z",
+      "updatedAt": "2025-12-30T21:22:46.708Z",
+      "submittedAt": null
+    },
+    {
+      "id": "ef47b34f-67f6-4a41-a594-5ee6ec568fef",
+      "status": "failed",
+      "file": {
+        "originalName": "2512020-2 SPS Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 129538,
+        "storedPath": "data\\uploads\\1767129766863-372ccac8-4fe4-41df-9072-b99483dc596b.pdf",
+        "fileName": "1767129766863-372ccac8-4fe4-41df-9072-b99483dc596b.pdf",
+        "publicUrl": "http://localhost:3030/files/1767129766863-372ccac8-4fe4-41df-9072-b99483dc596b.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T21:22:46.866Z",
+      "updatedAt": "2025-12-30T21:22:46.868Z",
+      "submittedAt": null
+    },
+    {
+      "id": "0378406b-90bf-48d6-8bd1-0c49653641a9",
+      "status": "failed",
+      "file": {
+        "originalName": "2512020-2 SPS Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 129538,
+        "storedPath": "data\\uploads\\1767129767028-3fbc1f5c-3037-45af-a221-125ee357ca1c.pdf",
+        "fileName": "1767129767028-3fbc1f5c-3037-45af-a221-125ee357ca1c.pdf",
+        "publicUrl": "http://localhost:3030/files/1767129767028-3fbc1f5c-3037-45af-a221-125ee357ca1c.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T21:22:47.030Z",
+      "updatedAt": "2025-12-30T21:22:47.032Z",
+      "submittedAt": null
+    },
+    {
+      "id": "f7301cad-3075-4d6a-9d38-704ac0d1b382",
+      "status": "failed",
+      "file": {
+        "originalName": "2512020-2 SPS Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 129538,
+        "storedPath": "data\\uploads\\1767129767166-b248bbee-b759-464f-96cd-06a3adf425f2.pdf",
+        "fileName": "1767129767166-b248bbee-b759-464f-96cd-06a3adf425f2.pdf",
+        "publicUrl": "http://localhost:3030/files/1767129767166-b248bbee-b759-464f-96cd-06a3adf425f2.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T21:22:47.169Z",
+      "updatedAt": "2025-12-30T21:22:47.171Z",
+      "submittedAt": null
+    },
+    {
+      "id": "82d281cd-586a-4f98-b257-b7d8d1f86395",
+      "status": "failed",
+      "file": {
+        "originalName": "2512020-2 SPS Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 129538,
+        "storedPath": "data\\uploads\\1767129770066-521864fe-a0b8-41eb-b032-45e6107868e9.pdf",
+        "fileName": "1767129770066-521864fe-a0b8-41eb-b032-45e6107868e9.pdf",
+        "publicUrl": "http://localhost:3030/files/1767129770066-521864fe-a0b8-41eb-b032-45e6107868e9.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T21:22:50.069Z",
+      "updatedAt": "2025-12-30T21:22:50.072Z",
+      "submittedAt": null
+    },
+    {
+      "id": "6e2d3321-47df-491c-8189-f5baa496ab77",
+      "status": "failed",
+      "file": {
+        "originalName": "2512020-2 SPS Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 129538,
+        "storedPath": "data\\uploads\\1767129770231-bdb93146-382e-43be-9685-868cc17b660e.pdf",
+        "fileName": "1767129770231-bdb93146-382e-43be-9685-868cc17b660e.pdf",
+        "publicUrl": "http://localhost:3030/files/1767129770231-bdb93146-382e-43be-9685-868cc17b660e.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T21:22:50.233Z",
+      "updatedAt": "2025-12-30T21:22:50.237Z",
+      "submittedAt": null
+    },
+    {
+      "id": "00e421c4-ea3f-47db-b6e5-a8db41453306",
+      "status": "failed",
+      "file": {
+        "originalName": "2512020-2 SPS Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 129538,
+        "storedPath": "data\\uploads\\1767129771273-67796b75-ff5c-4a3f-882f-418fa42a9d78.pdf",
+        "fileName": "1767129771273-67796b75-ff5c-4a3f-882f-418fa42a9d78.pdf",
+        "publicUrl": "http://localhost:3030/files/1767129771273-67796b75-ff5c-4a3f-882f-418fa42a9d78.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T21:22:51.275Z",
+      "updatedAt": "2025-12-30T21:22:51.277Z",
+      "submittedAt": null
+    },
+    {
+      "id": "8744235f-abaa-43c6-b3c1-f3cad4e31200",
+      "status": "failed",
+      "file": {
+        "originalName": "2512020-2 SPS Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 129538,
+        "storedPath": "data\\uploads\\1767129771413-c1f2b174-325c-4e2b-92a6-3dd13554737d.pdf",
+        "fileName": "1767129771413-c1f2b174-325c-4e2b-92a6-3dd13554737d.pdf",
+        "publicUrl": "http://localhost:3030/files/1767129771413-c1f2b174-325c-4e2b-92a6-3dd13554737d.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T21:22:51.414Z",
+      "updatedAt": "2025-12-30T21:22:51.417Z",
+      "submittedAt": null
+    },
+    {
+      "id": "6c2d7c49-8748-4854-9c7e-79968ec25d8c",
+      "status": "failed",
+      "file": {
+        "originalName": "2512020-2 SPS Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 129538,
+        "storedPath": "data\\uploads\\1767129771971-14c29b1f-edc4-4a8b-a357-f2878b4c55af.pdf",
+        "fileName": "1767129771971-14c29b1f-edc4-4a8b-a357-f2878b4c55af.pdf",
+        "publicUrl": "http://localhost:3030/files/1767129771971-14c29b1f-edc4-4a8b-a357-f2878b4c55af.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T21:22:51.974Z",
+      "updatedAt": "2025-12-30T21:22:51.976Z",
+      "submittedAt": null
+    },
+    {
+      "id": "bfa97d7e-9e61-455b-8bf2-1e61a85fa231",
+      "status": "failed",
+      "file": {
+        "originalName": "2512020-2 SPS Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 129538,
+        "storedPath": "data\\uploads\\1767129772397-c93ccd9d-4e46-4c84-820d-a5c99383c86f.pdf",
+        "fileName": "1767129772397-c93ccd9d-4e46-4c84-820d-a5c99383c86f.pdf",
+        "publicUrl": "http://localhost:3030/files/1767129772397-c93ccd9d-4e46-4c84-820d-a5c99383c86f.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T21:22:52.400Z",
+      "updatedAt": "2025-12-30T21:22:52.404Z",
+      "submittedAt": null
+    },
+    {
+      "id": "292e622a-2a89-4b73-a204-8ea67fc69e83",
+      "status": "failed",
+      "file": {
+        "originalName": "2512020-2 SPS Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 129538,
+        "storedPath": "data\\uploads\\1767129973491-b7ab258f-ac2e-4d52-9cfd-7a87231ac7f1.pdf",
+        "fileName": "1767129973491-b7ab258f-ac2e-4d52-9cfd-7a87231ac7f1.pdf",
+        "publicUrl": "http://localhost:3030/files/1767129973491-b7ab258f-ac2e-4d52-9cfd-7a87231ac7f1.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T21:26:13.493Z",
+      "updatedAt": "2025-12-30T21:26:13.496Z",
+      "submittedAt": null
+    },
+    {
+      "id": "fbbfd0af-bac3-4c06-aeeb-5f2b984d3758",
+      "status": "failed",
+      "file": {
+        "originalName": "2512020-2 SPS Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 129538,
+        "storedPath": "data\\uploads\\1767129982184-a6ea984a-312e-4346-9f6c-d93d15ddf1ef.pdf",
+        "fileName": "1767129982184-a6ea984a-312e-4346-9f6c-d93d15ddf1ef.pdf",
+        "publicUrl": "http://localhost:3030/files/1767129982184-a6ea984a-312e-4346-9f6c-d93d15ddf1ef.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T21:26:22.186Z",
+      "updatedAt": "2025-12-30T21:26:22.188Z",
+      "submittedAt": null
+    },
+    {
+      "id": "586f8ac9-ea5a-411b-bade-874e448e5a63",
+      "status": "failed",
+      "file": {
+        "originalName": "2512020-2 SPS Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 129538,
+        "storedPath": "data\\uploads\\1767129996814-f745a492-d4d6-456e-b0b2-7718c9810657.pdf",
+        "fileName": "1767129996814-f745a492-d4d6-456e-b0b2-7718c9810657.pdf",
+        "publicUrl": "http://localhost:3030/files/1767129996814-f745a492-d4d6-456e-b0b2-7718c9810657.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T21:26:36.816Z",
+      "updatedAt": "2025-12-30T21:26:36.819Z",
+      "submittedAt": null
+    },
+    {
+      "id": "54e88322-87df-4216-b00f-6de7daae0fd1",
+      "status": "failed",
+      "file": {
+        "originalName": "2511025-1 Merchants Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 55472,
+        "storedPath": "data\\uploads\\1767130546262-1cfa80bc-3538-48b6-a35c-ad83bc9d57e5.pdf",
+        "fileName": "1767130546262-1cfa80bc-3538-48b6-a35c-ad83bc9d57e5.pdf",
+        "publicUrl": "http://localhost:3030/files/1767130546262-1cfa80bc-3538-48b6-a35c-ad83bc9d57e5.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T21:35:46.263Z",
+      "updatedAt": "2025-12-30T21:35:46.265Z",
+      "submittedAt": null
+    },
+    {
+      "id": "d7590098-7706-4f9e-bed5-c3c718f1a648",
+      "status": "failed",
+      "file": {
+        "originalName": "2511025-1 Merchants Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 55472,
+        "storedPath": "data\\uploads\\1767130558511-094fa26a-9d4e-4d44-870c-8f7968041cbe.pdf",
+        "fileName": "1767130558511-094fa26a-9d4e-4d44-870c-8f7968041cbe.pdf",
+        "publicUrl": "http://localhost:3030/files/1767130558511-094fa26a-9d4e-4d44-870c-8f7968041cbe.pdf"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "pdf-parse export not found"
+      ],
+      "createdAt": "2025-12-30T21:35:58.513Z",
+      "updatedAt": "2025-12-30T21:35:58.517Z",
+      "submittedAt": null
+    },
+    {
+      "id": "8a59dcd3-5589-412d-aff8-32a0efc2625a",
+      "status": "uploaded",
+      "file": {
+        "originalName": "sample.png",
+        "mimeType": "image/png",
+        "size": 85,
+        "storedPath": "data\\uploads\\1767130637634-a3034ac5-93fe-4fa3-8191-054de2cf6741.png",
+        "fileName": "1767130637634-a3034ac5-93fe-4fa3-8191-054de2cf6741.png",
+        "publicUrl": "http://localhost:3030/files/1767130637634-a3034ac5-93fe-4fa3-8191-054de2cf6741.png"
+      },
+      "extractedText": "",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [],
+      "createdAt": "2025-12-30T21:37:17.637Z",
+      "updatedAt": "2025-12-30T21:37:17.637Z",
+      "submittedAt": null
+    },
+    {
+      "id": "8d334e6f-a4f3-4c23-9026-cc7f2decee03",
+      "status": "review",
+      "file": {
+        "originalName": "2512020-2 SPS Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 129538,
+        "storedPath": "data\\uploads\\1767130776067-47cd96d0-4e83-4e0b-b40e-29d555e7481a.pdf",
+        "fileName": "1767130776067-47cd96d0-4e83-4e0b-b40e-29d555e7481a.pdf",
+        "publicUrl": "http://localhost:3030/files/1767130776067-47cd96d0-4e83-4e0b-b40e-29d555e7481a.pdf"
+      },
+      "extractedText": "(extraction failed)",
+      "lineItems": [
+        {
+          "description": "(extraction failed)",
+          "quantity": 1,
+          "unit": "",
+          "notes": ""
+        }
+      ],
+      "metadata": {},
+      "errors": [],
+      "createdAt": "2025-12-30T21:39:36.069Z",
+      "updatedAt": "2025-12-30T21:39:36.428Z",
+      "submittedAt": null,
+      "extractMeta": {
+        "method": "failed",
+        "pages": 0
+      }
+    },
+    {
+      "id": "f2feb362-1e89-4c1a-acde-a0f8efa282d5",
+      "status": "review",
+      "file": {
+        "originalName": "2512020-2 SPS Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 129538,
+        "storedPath": "data\\uploads\\1767131295014-73f89c20-dde1-4d9f-8cb0-c1fd4fea735d.pdf",
+        "fileName": "1767131295014-73f89c20-dde1-4d9f-8cb0-c1fd4fea735d.pdf",
+        "publicUrl": "http://localhost:3030/files/1767131295014-73f89c20-dde1-4d9f-8cb0-c1fd4fea735d.pdf"
+      },
+      "extractedText": "(extraction failed)",
+      "lineItems": [
+        {
+          "description": "(extraction failed)",
+          "quantity": 1,
+          "unit": "",
+          "notes": ""
+        }
+      ],
+      "metadata": {},
+      "errors": [],
+      "createdAt": "2025-12-30T21:48:15.015Z",
+      "updatedAt": "2025-12-30T21:48:15.157Z",
+      "submittedAt": null,
+      "extractMeta": {
+        "method": "failed",
+        "pages": 0
+      }
+    },
+    {
+      "id": "aca5e66e-6c3f-4dc8-9db8-238294823d68",
+      "status": "review",
+      "file": {
+        "originalName": "2512020-2 SPS Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 129538,
+        "storedPath": "data\\uploads\\1767131737717-8b3c6e75-0cbb-40d1-b2fe-d6f08d52a189.pdf",
+        "fileName": "1767131737717-8b3c6e75-0cbb-40d1-b2fe-d6f08d52a189.pdf",
+        "publicUrl": "http://localhost:3030/files/1767131737717-8b3c6e75-0cbb-40d1-b2fe-d6f08d52a189.pdf"
+      },
+      "extractedText": "(reparse failed)",
+      "lineItems": [
+        {
+          "description": "(extraction failed)",
+          "quantity": 1,
+          "unit": "",
+          "notes": ""
+        }
+      ],
+      "metadata": {},
+      "errors": [
+        "Please provide binary data as `Uint8Array`, rather than `Buffer`."
+      ],
+      "createdAt": "2025-12-30T21:55:37.719Z",
+      "updatedAt": "2025-12-30T21:55:49.158Z",
+      "submittedAt": null,
+      "extractMeta": {
+        "method": "failed",
+        "pages": 0
+      }
+    },
+    {
+      "id": "6f94971a-f6f8-4f01-9b7c-78d521a5ad0c",
+      "status": "review",
+      "file": {
+        "originalName": "2512020-2 SPS Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 129538,
+        "storedPath": "data\\uploads\\1767132180410-8e895403-f5c6-45df-a409-af03047a246b.pdf",
+        "fileName": "1767132180410-8e895403-f5c6-45df-a409-af03047a246b.pdf",
+        "publicUrl": "http://localhost:3030/files/1767132180410-8e895403-f5c6-45df-a409-af03047a246b.pdf"
+      },
+      "extractedText": "(extraction failed)",
+      "lineItems": [
+        {
+          "description": "(extraction failed)",
+          "quantity": 1,
+          "unit": "",
+          "notes": ""
+        }
+      ],
+      "metadata": {},
+      "errors": [],
+      "createdAt": "2025-12-30T22:03:00.413Z",
+      "updatedAt": "2025-12-30T22:03:00.707Z",
+      "submittedAt": null,
+      "extractMeta": {
+        "method": "failed",
+        "pages": 0
+      }
     }
   ]
 }
