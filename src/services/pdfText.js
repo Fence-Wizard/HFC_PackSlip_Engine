@@ -1,3 +1,5 @@
+const pdfjs = require("pdfjs-dist");
+
 let pdfParseFn = null;
 
 function logShape(label, mod) {
@@ -9,25 +11,57 @@ function logShape(label, mod) {
   }
 }
 
-async function resolvePdfParse() {
-  if (pdfParseFn) return pdfParseFn;
-
+function tryLoadPdfParse() {
+  // Try main entry
   try {
     const mod = require("pdf-parse");
     const candidates = [mod, mod?.default, mod?.default?.default];
     const found = candidates.find((fn) => typeof fn === "function");
-    if (found) {
-      pdfParseFn = found;
-      return pdfParseFn;
-    }
-    logShape("cjs", mod);
+    if (found) return found;
+    logShape("cjs-main", mod);
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.error("pdf-parse require failed:", err?.message);
+    console.error("pdf-parse main require failed:", err?.message);
   }
 
-  // Fallback: no-op parser so uploads do not crash
-  pdfParseFn = async () => ({ text: "(extraction unavailable)", numpages: 0 });
+  // Try direct path to lib/pdf-parse (commonjs bundle)
+  try {
+    const mod = require("pdf-parse/lib/pdf-parse");
+    if (typeof mod === "function") return mod;
+    if (mod && typeof mod.default === "function") return mod.default;
+    logShape("cjs-lib", mod);
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error("pdf-parse lib require failed:", err?.message);
+  }
+
+  return null;
+}
+
+async function resolvePdfParse() {
+  if (pdfParseFn) return pdfParseFn;
+  const loaded = tryLoadPdfParse();
+  if (loaded) {
+    pdfParseFn = loaded;
+    return pdfParseFn;
+  }
+
+  // Fallback: minimal text extractor using pdfjs-dist
+  pdfParseFn = async (buffer) => {
+    const doc = await pdfjs.getDocument({ data: buffer }).promise;
+    let text = "";
+    for (let i = 1; i <= doc.numPages; i += 1) {
+      // eslint-disable-next-line no-await-in-loop
+      const page = await doc.getPage(i);
+      // eslint-disable-next-line no-await-in-loop
+      const content = await page.getTextContent();
+      const str = content.items.map((it) => it.str || "").join(" ");
+      text += `${str}\n`;
+    }
+    return { text, numpages: doc.numPages };
+  };
+  // eslint-disable-next-line no-console
+  console.error("pdf-parse not callable; using pdfjs-dist fallback");
   return pdfParseFn;
 }
 
