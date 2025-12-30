@@ -1,21 +1,13 @@
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
-const pdfParseLib = require("pdf-parse");
 const { fromBuffer } = require("pdf2pic");
 const logger = require("../config/logger");
-
-const pdfParse =
-  [pdfParseLib, pdfParseLib?.default, pdfParseLib?.default?.default].find(
-    (fn) => typeof fn === "function",
-  ) || (() => {
-    throw new Error("pdf-parse export not found");
-  });
+const { extractPdfText } = require("./pdfText");
 
 async function parsePdfText(buffer, reqId) {
-  const data = await pdfParse(buffer);
-  const text = data?.text || "";
-  return { text, pageCount: data?.numpages || 0 };
+  const data = await extractPdfText(buffer);
+  return { text: data.text, pageCount: data.pageCount };
 }
 
 async function pdfToImages(buffer, reqId) {

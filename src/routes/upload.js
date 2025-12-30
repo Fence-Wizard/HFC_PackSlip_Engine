@@ -62,12 +62,18 @@ router.post("/upload", upload.single("file"), async (req, res, next) => {
       reviewUrl: `/review.html?id=${ready.id}`,
     });
   } catch (err) {
-    logger.error("Upload processing failed", { reqId, message: err?.message });
+    logger.error("Upload processing failed", {
+      reqId,
+      message: err?.message,
+      stack: err?.stack,
+    });
     db.updatePackSlip(packSlip.id, {
       status: STATUSES.FAILED,
       errors: [err?.message || "Processing failed"],
     });
-    return next(err);
+    return res
+      .status(500)
+      .json({ error: `PDF extraction failed: ${err?.message || "Processing failed"}` });
   }
 });
 
