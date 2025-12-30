@@ -1,4 +1,4 @@
-const pdfjs = require("pdfjs-dist");
+const { getDocument, PDFDataRangeTransport } = require("pdfjs-dist");
 
 let pdfParseFn = null;
 
@@ -48,7 +48,8 @@ async function resolvePdfParse() {
 
   // Fallback: minimal text extractor using pdfjs-dist
   pdfParseFn = async (buffer) => {
-    const doc = await pdfjs.getDocument({ data: buffer }).promise;
+    const data = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+    const doc = await getDocument({ data }).promise;
     let text = "";
     for (let i = 1; i <= doc.numPages; i += 1) {
       // eslint-disable-next-line no-await-in-loop
