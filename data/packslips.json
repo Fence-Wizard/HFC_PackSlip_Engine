@@ -873,6 +873,247 @@
         "method": "failed",
         "pages": 0
       }
+    },
+    {
+      "id": "05ea12cc-682e-41a2-a7e3-23d7b5e597db",
+      "status": "review",
+      "file": {
+        "originalName": "2512020-2 SPS Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 129538,
+        "storedPath": "data\\uploads\\1767133730641-8459c152-2095-4c33-a4d0-76ec0994a381.pdf",
+        "fileName": "1767133730641-8459c152-2095-4c33-a4d0-76ec0994a381.pdf",
+        "publicUrl": "http://localhost:3030/files/1767133730641-8459c152-2095-4c33-a4d0-76ec0994a381.pdf"
+      },
+      "extractedText": "(reparse failed)",
+      "lineItems": [
+        {
+          "description": "(extraction failed)",
+          "quantity": 1,
+          "unit": "",
+          "notes": ""
+        }
+      ],
+      "metadata": {},
+      "errors": [
+        "Cannot read properties of undefined (reading 'verbosity')"
+      ],
+      "createdAt": "2025-12-30T22:28:50.642Z",
+      "updatedAt": "2025-12-30T22:29:29.963Z",
+      "submittedAt": null,
+      "extractMeta": {
+        "method": "failed",
+        "pages": 0
+      }
+    },
+    {
+      "id": "5aac7715-c7a5-44d5-9efc-3969eb3225b0",
+      "status": "review",
+      "file": {
+        "originalName": "2512020-2 SPS Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 129538,
+        "storedPath": "data\\uploads\\1767134027333-eb8dc1f3-e097-47ae-8836-9b5ab580eebe.pdf",
+        "fileName": "1767134027333-eb8dc1f3-e097-47ae-8836-9b5ab580eebe.pdf",
+        "publicUrl": "http://localhost:3030/files/1767134027333-eb8dc1f3-e097-47ae-8836-9b5ab580eebe.pdf"
+      },
+      "extractedText": "4301 46th Street Bladensburg, MD 20710 (301) 699-0400 Sales Fax: (978) 250-5320 Sales Phone: (866) 792-5295 * Quote valid 10 days. Expires: 11/28/2025 * Remit Payment to: Stephens Pipe & Steel, LLC P.O. Box 618 Russell Springs, KY 42642 Visit our website: https://SPSfence.com Pg 1 of 1 Sold To: Ship To: HURRICANE FENCE CO @ VA PO BOX 27527 RICHMOND, VA 23261-7527 ** Send Invoice by EMAIL ONLY. QUOTATION #: Billing Date : Customer Acct: Payment Terms: Customer PO #: Sales Person : Made By User : SPS Order # : Shipped Via : Contact Name : Fax number : HURRICANE FENCE CO @ VA (804)353-6030 CPU @ SPS: 4301 46TH STREET BLADENSBURG, MD 20710 08-155341 11/18/2025 37091 NET-60 2512020-2 J.KELLY-D.BRAY jenniferkelly 0-0 CPU TIFFANY- 804-477-8238(D 8043536039 CUSTOMER MUST FIELD VERIFY ALL MATERIALS. SPS IS NOT RESPONSIBLE FOR FINAL QUANTITIES OR TAKEOFFS! Ordered Shipped BackOrder Unit Product Item Description Packing Price Amount ** Your signature means you received all ** items accurately. Please verify all items ** at the time of receipt. ** 16 16 0 ea 5.35 85.60 TENSION BAR 96\"x3/4\" 420 420 0 ft 1.18 495.60 GALV 1-5/8\" x 21' x SPS20 SW x 20pc 56 56 0 ea 0.863 48.33 TENSION BAND 2-1/2in 56 56 0 ea 3.04 170.24 BEV TENSION BAND 4in 8 8 0 ea 0.8756 7.00 BRACE BAND 2-1/2in 8 8 0 ea 2.3507 18.81 BEV BRACE BAND 4in 52 52 0 ea 3.3982 176.71 PS LOOP CAP 2-1/2x1-5/8 16 16 0 ea 1.591 25.46 PS RAIL END COMBO 1-5/8in 300 300 0 ea 0.1096 32.88 BOLT/NUT 5/16x1-1/4in 3 box 500 500 0 ea 0.1311 65.55 ALUM TIE 9gax8-1/4in 5 pkg Ask me about ACCESS CONTROL… Call today and request to receive invoices via email. 1,126.18 6.0% Tax 67.57 ------------ 1,193.75 Total Order MATERIALS RECEIVED BY:_________________________ PRINT Name:_____________________ DATE:____/____/____ Acceptance of quote confirms your approval of materials as quoted. Review all Items. Any discrepancies MUST BE noted on original delivery document and VERIFIED BY DRIVER. Buyer agrees to pay all applicable taxes. Invoices not paid within terms will be charged a 1.5% monthly service charge. If payment made with credit card, a 2% convenience fee will be added. PRICES MAY CHANGE WITHOUT NOTICE! Returns subject to 15-50% Restock Fee. LBS:748 P/D:11-18",
+      "lineItems": [
+        {
+          "sku": "",
+          "description": "46th Street Bladensburg, MD 20710 (301) 699-0400 Sales Fax: (978) 250-5320 Sales Phone: (866) 792-5295 * Quote valid 10 days. Expires: 11/28/2025 * Remit Payment to: Stephens Pipe & Steel, LLC P.O. Box 618 Russell Springs, KY 42642 Visit our website: https://SPSfence.com Pg 1 of 1 Sold To: Ship To: HURRICANE FENCE CO @ VA PO BOX 27527 RICHMOND, VA 23261-7527 ** Send Invoice by EMAIL ONLY. QUOTATION #: Billing Date : Customer Acct: Payment Terms: Customer PO #: Sales Person : Made By User : SPS Order # : Shipped Via : Contact Name : Fax number : HURRICANE FENCE CO @ VA (804)353-6030 CPU @ SPS: 4301 46TH STREET BLADENSBURG, MD 20710 08-155341 11/18/2025 37091 NET-60 2512020-2 J.KELLY-D.BRAY jenniferkelly 0-0 CPU TIFFANY- 804-477-8238(D 8043536039 CUSTOMER MUST FIELD VERIFY ALL MATERIALS. SPS IS NOT RESPONSIBLE FOR FINAL QUANTITIES OR TAKEOFFS! Ordered Shipped BackOrder Unit Product Item Description Packing Price Amount ** Your signature means you received all ** items accurately. Please verify all items ** at the time of receipt. ** 16 16 0 ea 5.35 85.60 TENSION BAR 96\"x3/4\" 420 420 0 ft 1.18 495.60 GALV 1-5/8\" x 21' x SPS20 SW x 20pc 56 56 0 ea 0.863 48.33 TENSION BAND 2-1/2in 56 56 0 ea 3.04 170.24 BEV TENSION BAND 4in 8 8 0 ea 0.8756 7.00 BRACE BAND 2-1/2in 8 8 0 ea 2.3507 18.81 BEV BRACE BAND 4in 52 52 0 ea 3.3982 176.71 PS LOOP CAP 2-1/2x1-5/8 16 16 0 ea 1.591 25.46 PS RAIL END COMBO 1-5/8in 300 300 0 ea 0.1096 32.88 BOLT/NUT 5/16x1-1/4in 3 box 500 500 0 ea 0.1311 65.55 ALUM TIE 9gax8-1/4in 5 pkg Ask me about ACCESS CONTROL… Call today and request to receive invoices via email. 1,126.18 6.0% Tax 67.57 ------------ 1,193.75 Total Order MATERIALS RECEIVED BY:_________________________ PRINT Name:_____________________ DATE:____/____/____ Acceptance of quote confirms your approval of materials as quoted. Review all Items. Any discrepancies MUST BE noted on original delivery document and VERIFIED BY DRIVER. Buyer agrees to pay all applicable taxes. Invoices not paid within terms will be charged a 1.5% monthly service charge. If payment made with credit card, a 2% convenience fee will be added. PRICES MAY CHANGE WITHOUT NOTICE! Returns subject to 15-50% Restock Fee. LBS:748 P/D:11-18",
+          "quantity": 4301,
+          "unit": "",
+          "notes": ""
+        }
+      ],
+      "metadata": {},
+      "errors": [],
+      "createdAt": "2025-12-30T22:33:47.336Z",
+      "updatedAt": "2025-12-30T22:33:57.704Z",
+      "submittedAt": null,
+      "extractMeta": {
+        "method": "pdf-text",
+        "pages": 1
+      }
+    },
+    {
+      "id": "9810af6d-1d6b-4396-ab7f-82eb99cb7c6e",
+      "status": "submitted",
+      "file": {
+        "originalName": "2512020-2 SPS Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 129538,
+        "storedPath": "data\\uploads\\1767134389130-120bdffc-6532-4733-924b-68d7a3e014dd.pdf",
+        "fileName": "1767134389130-120bdffc-6532-4733-924b-68d7a3e014dd.pdf",
+        "publicUrl": "http://localhost:3030/files/1767134389130-120bdffc-6532-4733-924b-68d7a3e014dd.pdf"
+      },
+      "extractedText": "Remit Payment to: QUOTATION #: 08-155341 Pg 1 of 1\nStephens Pipe & Steel, LLC Billing Date : 11/18/2025\nCustomer Acct: 37091\nP.O. Box 618\nPayment Terms: NET-60\nRussell Springs, KY 42642\n4301 46th Street Customer PO #: 2512020-2\nBladensburg, MD 20710 Visit our website: Sales Person : J.KELLY-D.BRAY\n(301) 699-0400 https://SPSfence.com Made By User : jenniferkelly\nSales Fax: (978) 250-5320 SPS Order # : 0-0\nSales Phone: (866) 792-5295 Shipped Via : CPU\nContact Name : TIFFANY- 804-477-8238(D\nFax number : 8043536039\n* Quote valid 10 days. Expires: 11/28/2025 *\nSold To: HURRICANE FENCE CO @ VA Ship To: HURRICANE FENCE CO @ VA\nPO BOX 27527 (804)353-6030\nRICHMOND, VA 23261-7527 CPU @ SPS: 4301 46TH STREET\nBLADENSBURG, MD 20710\n** Send Invoice by EMAIL ONLY.\nCUSTOMER MUST FIELD VERIFY ALL MATERIALS. SPS IS NOT RESPONSIBLE FOR FINAL QUANTITIES OR TAKEOFFS!\nOrdered Shipped BackOrder Unit Product Item Description Packing Price Amount\n** Your signature means you received all\n** items accurately. Please verify all items\n** at the time of receipt.\n**\n16 16 0 ea TENSION BAR 96\"x3/4\" 5.35 85.60\n420 420 0 ft GALV 1-5/8\" x 21' x SPS20 SW x 20pc 1.18 495.60\n56 56 0 ea TENSION BAND 2-1/2in 0.863 48.33\n56 56 0 ea BEV TENSION BAND 4in 3.04 170.24\n8 8 0 ea BRACE BAND 2-1/2in 0.8756 7.00\n8 8 0 ea BEV BRACE BAND 4in 2.3507 18.81\n52 52 0 ea PS LOOP CAP 2-1/2x1-5/8 3.3982 176.71\n16 16 0 ea PS RAIL END COMBO 1-5/8in 1.591 25.46\n300 300 0 ea BOLT/NUT 5/16x1-1/4in 3 box 0.1096 32.88\n500 500 0 ea ALUM TIE 9gax8-1/4in 5 pkg 0.1311 65.55\nAsk me about ACCESS CONTROL… 1,126.18\n6.0% Tax 67.57\nCall today and request to receive invoices via email.\n------------\nTotal Order 1,193.75\nMATERIALS RECEIVED BY:_________________________ PRINT Name:_____________________ DATE:____/____/____\nAcceptance of quote confirms your approval of materials as quoted.\nReview all Items. Any discrepancies MUST BE noted on original delivery document and VERIFIED BY DRIVER. Buyer agrees to pay all\napplicable taxes. Invoices not paid within terms will be charged a 1.5% monthly service charge. If payment made with credit card,\na 2% convenience fee will be added. PRICES MAY CHANGE WITHOUT NOTICE! Returns subject to 15-50% Restock Fee. LBS:748 P/D:11-18",
+      "lineItems": [
+        {
+          "description": "TENSION BAR 96\"x3/4\"",
+          "quantity": 16,
+          "unit": "ea",
+          "sku": "",
+          "notes": ""
+        },
+        {
+          "description": "GALV 1-5/8\" x 21' x SPS20 SW x 20pc",
+          "quantity": 420,
+          "unit": "ft",
+          "sku": "",
+          "notes": ""
+        },
+        {
+          "description": "TENSION BAND 2-1/2in",
+          "quantity": 56,
+          "unit": "ea",
+          "sku": "",
+          "notes": ""
+        },
+        {
+          "description": "BEV TENSION BAND 4in",
+          "quantity": 56,
+          "unit": "ea",
+          "sku": "",
+          "notes": ""
+        },
+        {
+          "description": "BRACE BAND 2-1/2in",
+          "quantity": 8,
+          "unit": "ea",
+          "sku": "",
+          "notes": ""
+        },
+        {
+          "description": "BEV BRACE BAND 4in",
+          "quantity": 8,
+          "unit": "ea",
+          "sku": "",
+          "notes": ""
+        },
+        {
+          "description": "PS LOOP CAP 2-1/2x1-5/8",
+          "quantity": 52,
+          "unit": "ea",
+          "sku": "",
+          "notes": ""
+        },
+        {
+          "description": "PS RAIL END COMBO 1-5/8in",
+          "quantity": 16,
+          "unit": "ea",
+          "sku": "",
+          "notes": ""
+        },
+        {
+          "description": "BOLT/NUT 5/16x1-1/4in 3 box",
+          "quantity": 300,
+          "unit": "ea",
+          "sku": "",
+          "notes": ""
+        },
+        {
+          "description": "ALUM TIE 9gax8-1/4in 5 pkg",
+          "quantity": 500,
+          "unit": "ea",
+          "sku": "",
+          "notes": ""
+        }
+      ],
+      "metadata": {
+        "vendor": "",
+        "poOrJob": "",
+        "receivedDate": "2025-12-30"
+      },
+      "errors": [],
+      "createdAt": "2025-12-30T22:39:49.132Z",
+      "updatedAt": "2025-12-30T22:41:07.704Z",
+      "submittedAt": "2025-12-30T22:41:07.703Z",
+      "extractMeta": {
+        "method": "pdf-text",
+        "pages": 1
+      }
+    },
+    {
+      "id": "2ef58208-f846-4f2e-b25c-a79e766b1eae",
+      "status": "review",
+      "file": {
+        "originalName": "2511025-1 Merchants Order Confirmation.pdf",
+        "mimeType": "application/pdf",
+        "size": 55472,
+        "storedPath": "data\\uploads\\1767134492173-53c660dd-f362-4019-9dc0-56c706a63125.pdf",
+        "fileName": "1767134492173-53c660dd-f362-4019-9dc0-56c706a63125.pdf",
+        "publicUrl": "http://localhost:3030/files/1767134492173-53c660dd-f362-4019-9dc0-56c706a63125.pdf"
+      },
+      "extractedText": "ORDER CONFIRMATION\nPrinted By JUDYLORE01\nPrinted Date 11/12/25 15:24:41\nMerchants Metals - Landover MD Order number 1012944835 A19\n7631 Jefferson Ave\nHyattsville, MD 20785-1602 US\n301-927-4080\nSold To Bill To Req Dely Date\n164507 Hurricane Fence Co.\n11/17/25\nHurricane Fence Co. 1300 Dinneen St\n1300 Dinneen St Richmond, VA 23261 US\nRichmond, VA 23261 US\nCust PO No Terms / Cash Disc Order Date\nPhone 804-353-6030\n2511025-1 Net 60 Days 11/12/25\nFax 804-353-6039\nJob Name F. O. B. Net Weight\nShip To\n2511025-1 Customer Pickup (CO\nHurricane Fence Co. 1,536.7\nOnly)\n1300 Dinneen St\nCust. Contact Entered by\nRichmond, VA 23261 US\nAMY SHELTON JUDYLORE01\nLine Item Description Quantity U/M Net Price Per Amount\n1 58950014 FS40 2-7/8X24 MJ GL 192 LNF 4.35 835.20\nCUT TO 6' LENGTH TO MAKE 32 PIECES\n2 59220089 FS40 2-3/8X24 MJ BK LM 144 LNF 3.62 521.28\nCUT TO 6' LENGTHS TO MAKE 24 PIECES\n3 59220088 FS40 2-3/8X21 MJ BK LM 63 LNF 3.62 228.06\nCUT TO 7' LENGTHS TO MAKE 9 PIECES\nAll quotations and sales of products by Fencing Supply Group (or any of its affiliates) are subject to FSG’s then current Terms and Conditions of Sale\nlocated at www.fencingsupplygroup.com/termsofsale.\nItem total 1,584.54\nTax total 95.09\nTotal USD 1,679.63\n__________________________________ __________________________________\nCustomer Signature Title Date\nTHIS IS NOT A LOADING DOCUMENT\nAttention: If this order is for special order material, it cannot be cancelled or returned. Please check the order carefully!\nPage 1 of 1",
+      "lineItems": [
+        {
+          "sku": "",
+          "description": "Jefferson Ave",
+          "quantity": 7631,
+          "unit": "",
+          "price": 0,
+          "notes": ""
+        },
+        {
+          "sku": "",
+          "description": "Hurricane Fence Co.",
+          "quantity": 164507,
+          "unit": "",
+          "price": 0,
+          "notes": ""
+        },
+        {
+          "sku": "",
+          "description": "Dinneen St Richmond, VA 23261 US",
+          "quantity": 1300,
+          "unit": "",
+          "price": 0,
+          "notes": ""
+        },
+        {
+          "sku": "",
+          "description": "Dinneen St",
+          "quantity": 1300,
+          "unit": "",
+          "price": 0,
+          "notes": ""
+        },
+        {
+          "sku": "",
+          "description": "58950014 FS40 2-7/8X24 MJ GL 192 LNF 4.35 835.20",
+          "quantity": 1,
+          "unit": "",
+          "price": 0,
+          "notes": ""
+        },
+        {
+          "sku": "",
+          "description": "59220089 FS40 2-3/8X24 MJ BK LM 144 LNF 3.62 521.28",
+          "quantity": 2,
+          "unit": "",
+          "price": 0,
+          "notes": ""
+        },
+        {
+          "sku": "",
+          "description": "59220088 FS40 2-3/8X21 MJ BK LM 63 LNF 3.62 228.06",
+          "quantity": 3,
+          "unit": "",
+          "price": 0,
+          "notes": ""
+        }
+      ],
+      "metadata": {},
+      "errors": [],
+      "createdAt": "2025-12-30T22:41:32.177Z",
+      "updatedAt": "2025-12-30T22:41:32.250Z",
+      "submittedAt": null,
+      "extractMeta": {
+        "method": "pdf-text",
+        "pages": 1
+      }
     }
   ]
 }
