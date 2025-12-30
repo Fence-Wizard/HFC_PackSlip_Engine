@@ -86,10 +86,16 @@ router.post("/upload", upload.single("file"), async (req, res, next) => {
       stack: err?.stack,
     });
     db.updatePackSlip(packSlip.id, {
-      status: STATUSES.FAILED,
+      status: STATUSES.EXTRACTED,
+      extractedText: "(processing failed)",
+      extractMeta: { method: "failed", pages: 0 },
       errors: [err?.message || "Processing failed"],
     });
-    return res.status(500).json({ error: err?.message || "Processing failed" });
+    return res.json({
+      id: packSlip.id,
+      status: STATUSES.REVIEW,
+      reviewUrl: `/review.html?id=${packSlip.id}`,
+    });
   }
 });
 

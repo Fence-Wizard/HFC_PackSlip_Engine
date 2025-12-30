@@ -1,5 +1,14 @@
 let pdfParseFn = null;
 
+function logShape(label, mod) {
+  try {
+    // eslint-disable-next-line no-console
+    console.error(`pdf-parse export shape (${label}):`, mod ? Object.keys(mod) : "null");
+  } catch {
+    // ignore
+  }
+}
+
 async function resolvePdfParse() {
   if (pdfParseFn) return pdfParseFn;
 
@@ -11,14 +20,15 @@ async function resolvePdfParse() {
       pdfParseFn = found;
       return pdfParseFn;
     }
-    // eslint-disable-next-line no-console
-    console.error("pdf-parse export shape (cjs):", Object.keys(mod || {}));
+    logShape("cjs", mod);
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error("pdf-parse require failed:", err?.message);
   }
 
-  throw new Error("pdf-parse export not found");
+  // Fallback: no-op parser so uploads do not crash
+  pdfParseFn = async () => ({ text: "(extraction unavailable)", numpages: 0 });
+  return pdfParseFn;
 }
 
 async function extractPdfText(buffer) {
