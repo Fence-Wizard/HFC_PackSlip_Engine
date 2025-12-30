@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pack Slip Engine - Upload</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 24px; }
+      .card { border: 1px solid #ddd; border-radius: 6px; padding: 16px; max-width: 640px; }
+      .status { margin-top: 12px; color: #555; }
+    </style>
+  </head>
+  <body>
+    <h1>Pack Slip Engine</h1>
+    <div class="card">
+      <h3>Upload PDF or Image</h3>
+      <form id="uploadForm">
+        <input type="file" name="file" accept=".pdf,image/*" required />
+        <button type="submit">Upload</button>
+      </form>
+      <div class="status" id="status"></div>
+    </div>
+
+    <script>
+      const form = document.getElementById("uploadForm");
+      const statusEl = document.getElementById("status");
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        statusEl.textContent = "Uploading...";
+        const formData = new FormData(form);
+        try {
+          const res = await fetch("/api/upload", { method: "POST", body: formData });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || "Upload failed");
+          }
+          const data = await res.json();
+          statusEl.textContent = "Processing complete. Redirecting to review...";
+          window.location.href = data.reviewUrl || `/review.html?id=${data.id}`;
+        } catch (err) {
+          statusEl.textContent = err.message;
+        }
+      });
+    </script>
+  </body>
+</html>
+

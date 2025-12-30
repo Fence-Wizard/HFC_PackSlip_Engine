@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pack Slip Review</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 24px; }
+      textarea { width: 100%; min-height: 200px; }
+      table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+      th, td { border: 1px solid #ddd; padding: 8px; }
+      input[type="text"], input[type="number"], input[type="date"] { width: 100%; }
+      .card { border: 1px solid #ddd; border-radius: 6px; padding: 16px; margin-bottom: 16px; }
+      .status { color: #555; margin-top: 8px; }
+    </style>
+  </head>
+  <body>
+    <h1>Review Pack Slip</h1>
+    <div class="card">
+      <h3>Metadata</h3>
+      <label>Vendor <input type="text" id="vendor" /></label><br /><br />
+      <label>PO / Job <input type="text" id="poJob" /></label><br /><br />
+      <label>Received Date <input type="date" id="receivedDate" /></label>
+    </div>
+
+    <div class="card">
+      <h3>Extracted Text</h3>
+      <textarea id="extractedText" readonly></textarea>
+    </div>
+
+    <div class="card">
+      <h3>Line Items</h3>
+      <table id="itemsTable">
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th>Qty</th>
+            <th>Unit</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <button id="addRow">Add Row</button>
+    </div>
+
+    <button id="submitBtn">Submit to n8n</button>
+    <div class="status" id="status"></div>
+
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get("id");
+      const statusEl = document.getElementById("status");
+      const tbody = document.querySelector("#itemsTable tbody");
+      const extractedTextEl = document.getElementById("extractedText");
+
+      if (!id) {
+        statusEl.textContent = "Missing id";
+      } else {
+        loadRecord();
+      }
+
+      async function loadRecord() {
+        statusEl.textContent = "Loading...";
+        const res = await fetch(`/api/review/${id}`);
+        if (!res.ok) {
+          statusEl.textContent = "Not found";
+          return;
+        }
+        const data = await res.json();
+        extractedTextEl.value = data.extractedText || "";
+        document.getElementById("vendor").value = data.metadata?.vendor || "";
+        document.getElementById("poJob").value = data.metadata?.poOrJob || "";
+        document.getElementById("receivedDate").value = data.metadata?.receivedDate || "";
+        renderItems(data.lineItems || []);
+        statusEl.textContent = "";
+      }
+
+      function renderItems(items) {
+        tbody.innerHTML = "";
+        items.forEach((item) => addRow(item));
+        if (items.length === 0) addRow();
+      }
+
+      function addRow(item = {}) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><input type="text" value="${item.description || ""}"></td>
+          <td><input type="number" value="${item.quantity || 0}"></td>
+          <td><input type="text" value="${item.unit || ""}"></td>
+          <td><input type="text" value="${item.notes || ""}"></td>
+        `;
+        tbody.appendChild(tr);
+      }
+
+      document.getElementById("addRow").addEventListener("click", () => addRow());
+
+      document.getElementById("submitBtn").addEventListener("click", async () => {
+        const lineItems = Array.from(tbody.querySelectorAll("tr")).map((tr) => {
+          const [description, quantity, unit, notes] = tr.querySelectorAll("input");
+          return {
+            description: description.value,
+            quantity: Number(quantity.value) || 0,
+            unit: unit.value,
+            notes: notes.value,
+          };
+        });
+
+        const payload = {
+          metadata: {
+            vendor: document.getElementById("vendor").value,
+            poOrJob: document.getElementById("poJob").value,
+            receivedDate: document.getElementById("receivedDate").value,
+          },
+          lineItems,
+        };
+
+        statusEl.textContent = "Submitting...";
+        const res = await fetch(`/api/submit/${id}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          statusEl.textContent = err.error || "Submit failed";
+          return;
+        }
+        const data = await res.json();
+        window.location.href = `/done.html?id=${data.id}`;
+      });
+    </script>
+  </body>
+</html>
+
