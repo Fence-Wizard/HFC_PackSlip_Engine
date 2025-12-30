@@ -5,7 +5,12 @@ const pdfParseLib = require("pdf-parse");
 const { fromBuffer } = require("pdf2pic");
 const logger = require("../config/logger");
 
-const pdfParse = typeof pdfParseLib === "function" ? pdfParseLib : pdfParseLib.default;
+const pdfParse =
+  [pdfParseLib, pdfParseLib?.default, pdfParseLib?.default?.default].find(
+    (fn) => typeof fn === "function",
+  ) || (() => {
+    throw new Error("pdf-parse export not found");
+  });
 
 async function parsePdfText(buffer, reqId) {
   const data = await pdfParse(buffer);
