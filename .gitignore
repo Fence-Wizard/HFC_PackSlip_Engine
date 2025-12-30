@@ -1,0 +1,21 @@
+﻿# Secrets
+.env
+*.key
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+
+# Build / temp
+dist/
+build/
+tmp/
+logs/
+*.log
+
+# PDFs / extracted text (if generated)
+*.pdf
+output/
