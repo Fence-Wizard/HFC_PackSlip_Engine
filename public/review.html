@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pack Slip Engine • Review</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/assets/app.css" />
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <header class="border-b bg-white/70 backdrop-blur">
+    <div class="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="/upload.html" class="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-semibold">PS</a>
+        <div>
+          <div class="font-semibold leading-tight">Pack Slip Engine</div>
+          <div class="text-xs text-slate-500" id="subtitle">Review & confirm</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="/upload.html" class="text-sm px-3 py-2 rounded-xl border border-slate-200 hover:bg-white">New upload</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 py-8 space-y-6">
+    <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div class="min-w-0">
+          <h1 class="text-xl font-semibold">Review extraction</h1>
+          <p class="mt-1 text-sm text-slate-600">
+            Confirm the received items before we notify Slack and email via n8n.
+          </p>
+        </div>
+        <div class="flex gap-3">
+          <button id="addRowBtn" class="px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-sm">
+            + Add item
+          </button>
+          <button id="submitBtn" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium disabled:opacity-50">
+            Confirm & Send
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-5 grid gap-4 md:grid-cols-3">
+        <div>
+          <label class="text-xs font-medium text-slate-600">Vendor</label>
+          <input id="vendor" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/20"
+            placeholder="e.g., ABC Supply" />
+        </div>
+        <div>
+          <label class="text-xs font-medium text-slate-600">PO / Job #</label>
+          <input id="po" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/20"
+            placeholder="e.g., PO-12345 or Job-67890" />
+        </div>
+        <div>
+          <label class="text-xs font-medium text-slate-600">Received date</label>
+          <input id="receivedDate" type="date" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/20" />
+        </div>
+      </div>
+
+      <div class="mt-4 text-xs text-slate-500">
+        <span class="font-medium text-slate-700" id="fileName"></span>
+        <span class="mx-2">•</span>
+        <span id="uploadedAt"></span>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b flex items-center justify-between">
+        <h2 class="font-semibold">Line items</h2>
+        <div class="text-xs text-slate-500">Edit any values before confirming</div>
+      </div>
+
+      <div class="overflow-auto">
+        <table class="min-w-full text-sm">
+          <thead class="bg-slate-50 text-slate-600">
+            <tr>
+              <th class="text-left font-medium px-4 py-3 w-32">SKU</th>
+              <th class="text-left font-medium px-4 py-3">Description</th>
+              <th class="text-left font-medium px-4 py-3 w-24">Qty</th>
+              <th class="text-left font-medium px-4 py-3 w-24">UOM</th>
+              <th class="px-4 py-3 w-14"></th>
+            </tr>
+          </thead>
+          <tbody id="itemsBody" class="divide-y"></tbody>
+        </table>
+      </div>
+
+      <div class="px-6 py-4 bg-slate-50 border-t flex items-center justify-between">
+        <div class="text-sm text-slate-600">
+          Total items: <span id="count" class="font-medium text-slate-900">0</span>
+        </div>
+        <button id="autoParseBtn" class="text-sm px-4 py-2 rounded-xl border border-slate-200 hover:bg-white">
+          Re-run best-effort parse
+        </button>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b flex items-center justify-between">
+        <h2 class="font-semibold">Extracted text</h2>
+        <button id="copyTextBtn" class="text-sm px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50">
+          Copy text
+        </button>
+      </div>
+      <div class="p-6">
+        <pre id="extractedText" class="mono text-xs whitespace-pre-wrap break-words bg-slate-50 border border-slate-200 rounded-2xl p-4 max-h-[380px] overflow-auto"></pre>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module">
+    import { qs, qsa, toast, confirmModal, formatDateTime } from "/assets/ui.js";
+    import { apiGet, apiPost } from "/assets/api.js";
+
+    const params = new URLSearchParams(location.search);
+    const id = params.get("id");
+
+    const submitBtn = qs("#submitBtn");
+    const addRowBtn = qs("#addRowBtn");
+    const autoParseBtn = qs("#autoParseBtn");
+    const itemsBody = qs("#itemsBody");
+    const countEl = qs("#count");
+
+    const vendorEl = qs("#vendor");
+    const poEl = qs("#po");
+    const receivedDateEl = qs("#receivedDate");
+    const fileNameEl = qs("#fileName");
+    const uploadedAtEl = qs("#uploadedAt");
+    const extractedTextEl = qs("#extractedText");
+
+    const copyTextBtn = qs("#copyTextBtn");
+
+    let pack = null;
+
+    if (!id) {
+      toast("Missing pack slip id in URL. Go back and upload again.", "error", 7000);
+    } else {
+      load();
+    }
+
+    async function load() {
+      submitBtn.disabled = true;
+      try {
+        pack = await apiGet(`/api/packs/${encodeURIComponent(id)}`);
+        hydrate(pack);
+        submitBtn.disabled = false;
+      } catch (e) {
+      }
+    }
+
+    function hydrate(p) {
+      fileNameEl.textContent = p.fileName || `PackSlip ${p.id}`;
+      uploadedAtEl.textContent = p.uploadedAt ? `Uploaded ${formatDateTime(p.uploadedAt)}` : "";
+      vendorEl.value = p.fields?.vendor || "";
+      poEl.value = p.fields?.po || "";
+      receivedDateEl.value = p.fields?.receivedDate || new Date().toISOString().slice(0,10);
+
+      extractedTextEl.textContent = p.extractedText || "(No extracted text yet.)";
+
+      renderItems(Array.isArray(p.lineItems) ? p.lineItems : []);
+    }
+
+    function renderItems(items) {
+      itemsBody.innerHTML = "";
+      items.forEach((it, idx) => itemsBody.appendChild(rowEl(it, idx)));
+      updateCount();
+      if (items.length === 0) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td colspan="5" class="px-4 py-8 text-center text-slate-500">
+            No line items detected yet. Click “+ Add item” to start.
+          </td>
+        `;
+        itemsBody.appendChild(tr);
+      }
+    }
+
+    function rowEl(item, idx) {
+      const tr = document.createElement("tr");
+      tr.className = "align-top";
+      tr.dataset.idx = String(idx);
+
+      tr.innerHTML = `
+        <td class="px-4 py-3">
+          <input data-k="sku" class="w-full rounded-lg border border-slate-200 px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/20"
+            placeholder="SKU" value="${escapeAttr(item.sku)}" />
+        </td>
+        <td class="px-4 py-3">
+          <input data-k="description" class="w-full rounded-lg border border-slate-200 px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/20"
+            placeholder="Description" value="${escapeAttr(item.description)}" />
+        </td>
+        <td class="px-4 py-3">
+          <input data-k="qty" type="number" step="1" min="0"
+            class="w-full rounded-lg border border-slate-200 px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/20"
+            placeholder="0" value="${escapeAttr(item.qty)}" />
+        </td>
+        <td class="px-4 py-3">
+          <input data-k="uom" class="w-full rounded-lg border border-slate-200 px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/20"
+            placeholder="ea" value="${escapeAttr(item.uom)}" />
+        </td>
+        <td class="px-4 py-3 text-right">
+          <button class="p-2 rounded-lg hover:bg-slate-100" data-del aria-label="Delete row">🗑️</button>
+        </td>
+      `;
+
+      tr.querySelector("[data-del]").addEventListener("click", () => {
+        const idx = Number(tr.dataset.idx);
+        if (!pack?.lineItems) pack.lineItems = [];
+        pack.lineItems.splice(idx, 1);
+        renderItems(pack.lineItems);
+      });
+
+      qsa("input", tr).forEach(inp => {
+        inp.addEventListener("input", () => {
+          const i = Number(tr.dataset.idx);
+          const k = inp.dataset.k;
+          if (!pack?.lineItems) pack.lineItems = [];
+          pack.lineItems[i] = pack.lineItems[i] || {};
+          pack.lineItems[i][k] = normalizeValue(k, inp.value);
+          updateCount();
+        });
+      });
+
+      return tr;
+    }
+
+    function normalizeValue(k, v) {
+      if (k === "qty") return v === "" ? "" : Number(v);
+      return v ?? "";
+    }
+
+    function updateCount() {
+      const items = pack?.lineItems || [];
+      countEl.textContent = String(items.filter(x => (x.description || x.sku || x.qty || x.uom)).length);
+    }
+
+    addRowBtn.addEventListener("click", () => {
+      if (!pack) return;
+      if (!Array.isArray(pack.lineItems)) pack.lineItems = [];
+      pack.lineItems.push({ sku: "", description: "", qty: "", uom: "ea" });
+      renderItems(pack.lineItems);
+    });
+
+    autoParseBtn.addEventListener("click", async () => {
+      toast("Best-effort parse is a server feature. Implement /api/packs/:id/reparse to enable.", "info", 5000);
+    });
+
+    copyTextBtn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(extractedTextEl.textContent || "");
+        toast("Copied extracted text.", "success");
+      } catch {
+        toast("Could not copy text (clipboard blocked).", "warning");
+      }
+    });
+
+    submitBtn.addEventListener("click", async () => {
+      if (!pack) return;
+
+      const ok = await confirmModal({
+        title: "Confirm & Send",
+        body: "This will submit the confirmed items to n8n for email + Slack notification. Continue?",
+        confirmText: "Yes, send it",
+        cancelText: "Not yet"
+      });
+      if (!ok) return;
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Sending…";
+
+      try {
+        const payload = {
+          fields: {
+            vendor: vendorEl.value.trim(),
+            po: poEl.value.trim(),
+            receivedDate: receivedDateEl.value
+          },
+          lineItems: (pack.lineItems || []).filter(x => x && (x.description || x.sku || x.qty || x.uom)),
+          confirm: true
+        };
+
+        await apiPost(`/api/packs/${encodeURIComponent(id)}/submit`, payload);
+        toast("Submitted successfully.", "success");
+        window.location.href = `/done.html?id=${encodeURIComponent(id)}`;
+      } catch (e) {
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Confirm & Send";
+      }
+    });
+
+    function escapeAttr(v) {
+      return String(v ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+    }
+  </script>
+</body>
+</html>
+

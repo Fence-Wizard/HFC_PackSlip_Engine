@@ -9,6 +9,7 @@ const healthRouter = require("./routes/health");
 const uploadRouter = require("./routes/upload");
 const reviewRouter = require("./routes/review");
 const submitRouter = require("./routes/submit");
+const packsRouter = require("./routes/packs");
 const errorHandler = require("./middleware/errorHandler");
 
 loadConfig();
@@ -23,8 +24,8 @@ app.use(requestId);
 app.use(express.json({ limit: "2mb" }));
 
 // Serve static UI assets
-const uiDir = path.join(__dirname, "ui");
-app.use(express.static(uiDir));
+const publicDir = path.join(__dirname, "..", "public");
+app.use(express.static(publicDir));
 
 // Serve uploaded files (for n8n to fetch)
 app.use("/files", express.static(config.uploadDir));
@@ -32,7 +33,11 @@ app.use("/files", express.static(config.uploadDir));
 app.use("/api", uploadRouter);
 app.use("/api", reviewRouter);
 app.use("/api", submitRouter);
+app.use("/api", packsRouter);
 app.use("/", healthRouter);
+
+// Friendly redirect for root
+app.get("/", (req, res) => res.redirect("/upload.html"));
 
 app.use(errorHandler);
 

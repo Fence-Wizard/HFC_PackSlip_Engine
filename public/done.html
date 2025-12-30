@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pack Slip Engine • Done</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/assets/app.css" />
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <header class="border-b bg-white/70 backdrop-blur">
+    <div class="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="/upload.html" class="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-semibold">PS</a>
+        <div>
+          <div class="font-semibold leading-tight">Pack Slip Engine</div>
+          <div class="text-xs text-slate-500">Submission complete</div>
+        </div>
+      </div>
+      <a href="/upload.html" class="text-sm px-3 py-2 rounded-xl border border-slate-200 hover:bg-white">New upload</a>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-6xl px-4 py-12">
+    <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-10 text-center">
+      <div class="mx-auto w-14 h-14 rounded-2xl bg-emerald-600 text-white flex items-center justify-center text-2xl">✓</div>
+      <h1 class="mt-4 text-2xl font-semibold">Pack slip submitted</h1>
+      <p class="mt-2 text-slate-600 text-sm">
+        n8n should handle email + Slack posting. You can upload another slip any time.
+      </p>
+
+      <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+        <a href="/upload.html" class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium">
+          Upload another
+        </a>
+        <a id="backToReview" href="#" class="px-5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50">
+          Back to review
+        </a>
+      </div>
+
+      <div class="mt-8 text-xs text-slate-500">
+        ID: <span id="id" class="mono"></span>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { toast } from "/assets/ui.js";
+    const params = new URLSearchParams(location.search);
+    const id = params.get("id");
+    document.getElementById("id").textContent = id || "(missing)";
+    document.getElementById("backToReview").href = id ? `/review.html?id=${encodeURIComponent(id)}` : "/upload.html";
+    if (!id) toast("Missing id. If you refreshed, that’s okay—upload a new slip.", "warning", 6000);
+  </script>
+</body>
+</html>
+

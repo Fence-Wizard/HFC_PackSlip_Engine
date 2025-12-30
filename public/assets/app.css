@@ -1,0 +1,4 @@
+:root { color-scheme: light; }
+html, body { height: 100%; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+
