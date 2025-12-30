@@ -1,74 +1,90 @@
 let pdfParseFn = null;
 
-async function resolvePdfParse() {
-  if (pdfParseFn) return pdfParseFn;
+function logShape(label, mod) {
+  try {
+    // eslint-disable-next-line no-console
+    console.error(`pdf-parse export shape (${label}):`, mod ? Object.keys(mod) : "null");
+  } catch {
+    // ignore
+  }
+}
 
-  // Try pdf-parse first
+function tryLoadPdfParse() {
+  // Try main entry - pdf-parse v2.x exports PDFParse class
   try {
     const mod = require("pdf-parse");
     
-    // Check for v1.x style callable
-    const candidates = [mod, mod?.default, mod?.default?.default];
-    const found = candidates.find((fn) => typeof fn === "function");
-    if (found) {
-      // eslint-disable-next-line no-console
-      console.log("✓ Using pdf-parse (v1 style)");
-      pdfParseFn = found;
-      return pdfParseFn;
-    }
+    // Check if it's a function directly (v1.x style)
+    if (typeof mod === "function") return mod;
+    if (typeof mod?.default === "function") return mod.default;
     
-    // Check for v2.x PDFParse class
-    if (mod?.PDFParse && typeof mod.PDFParse === "function") {
+    // pdf-parse v2.x: use PDFParse class
+    if (mod?.PDFParse) {
+      const PDFParse = mod.PDFParse;
       // eslint-disable-next-line no-console
-      console.log("✓ Using pdf-parse v2 PDFParse class");
-      const PDFParseClass = mod.PDFParse;
-      pdfParseFn = async (buffer) => {
-        const parser = new PDFParseClass();
+      console.error("pdf-parse v2 detected; using PDFParse class");
+      return async (buffer) => {
+        const parser = new PDFParse();
         const result = await parser.parse(buffer);
-        return {
-          text: result?.text || "",
-          numpages: result?.numPages || result?.numpages || result?.pages || 0,
-        };
+        return { text: result?.text || "", numpages: result?.numPages || result?.numpages || 0 };
       };
-      return pdfParseFn;
     }
     
-    // eslint-disable-next-line no-console
-    console.log("pdf-parse exports:", Object.keys(mod || {}));
+    logShape("cjs-main", mod);
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.log("pdf-parse not available:", err?.message);
+    console.error("pdf-parse main require failed:", err?.message);
   }
 
-  // Fallback to pdfjs-dist using dynamic import (ESM)
-  // eslint-disable-next-line no-console
-  console.log("Using pdfjs-dist fallback...");
-  
+  return null;
+}
+
+async function loadPdfjs() {
+  // pdfjs-dist modern versions are ESM; use dynamic import
   try {
-    const pdfjsLib = await import("pdfjs-dist");
-    pdfParseFn = async (buffer) => {
-      const data = new Uint8Array(buffer);
-      const loadingTask = pdfjsLib.getDocument({ data });
-      const pdfDoc = await loadingTask.promise;
-      let fullText = "";
-      for (let i = 1; i <= pdfDoc.numPages; i += 1) {
-        // eslint-disable-next-line no-await-in-loop
-        const page = await pdfDoc.getPage(i);
-        // eslint-disable-next-line no-await-in-loop
-        const textContent = await page.getTextContent();
-        const pageText = textContent.items.map((item) => item.str).join(" ");
-        fullText += `${pageText}\n`;
-      }
-      return { text: fullText.trim(), numpages: pdfDoc.numPages };
-    };
+    const mod = await import("pdfjs-dist");
+    if (mod?.getDocument) return mod;
+    if (mod?.default?.getDocument) return mod.default;
     // eslint-disable-next-line no-console
-    console.log("✓ pdfjs-dist loaded successfully");
-    return pdfParseFn;
+    console.error("pdfjs-dist loaded but getDocument not found:", Object.keys(mod));
   } catch (err) {
     // eslint-disable-next-line no-console
-    console.error("pdfjs-dist fallback failed:", err?.message);
-    throw new Error("No PDF parser available");
+    console.error("pdfjs-dist import failed:", err?.message);
   }
+  return null;
+}
+
+async function resolvePdfParse() {
+  if (pdfParseFn) return pdfParseFn;
+  const loaded = tryLoadPdfParse();
+  if (loaded) {
+    pdfParseFn = loaded;
+    return pdfParseFn;
+  }
+
+  // Fallback: minimal text extractor using pdfjs-dist
+  pdfParseFn = async (buffer) => {
+    const pdfjs = await loadPdfjs();
+    if (!pdfjs || !pdfjs.getDocument) {
+      throw new Error("pdfjs-dist unavailable");
+    }
+    // Convert Buffer to Uint8Array for pdfjs
+    const data = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+    const doc = await pdfjs.getDocument({ data }).promise;
+    let text = "";
+    for (let i = 1; i <= doc.numPages; i += 1) {
+      // eslint-disable-next-line no-await-in-loop
+      const page = await doc.getPage(i);
+      // eslint-disable-next-line no-await-in-loop
+      const content = await page.getTextContent();
+      const str = content.items.map((it) => it.str || "").join(" ");
+      text += `${str}\n`;
+    }
+    return { text, numpages: doc.numPages };
+  };
+  // eslint-disable-next-line no-console
+  console.error("pdf-parse not callable; using pdfjs-dist fallback");
+  return pdfParseFn;
 }
 
 async function extractPdfText(buffer) {
@@ -86,4 +102,3 @@ async function extractPdfText(buffer) {
 module.exports = {
   extractPdfText,
 };
-
