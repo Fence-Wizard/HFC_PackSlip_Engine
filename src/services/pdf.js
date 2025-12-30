@@ -1,9 +1,11 @@
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
-const pdfParse = require("pdf-parse");
+const pdfParseLib = require("pdf-parse");
 const { fromBuffer } = require("pdf2pic");
 const logger = require("../config/logger");
+
+const pdfParse = typeof pdfParseLib === "function" ? pdfParseLib : pdfParseLib.default;
 
 async function parsePdfText(buffer, reqId) {
   const data = await pdfParse(buffer);
