@@ -1,101 +1,118 @@
-let pdfParseFn = null;
+/**
+ * PDF text extraction using pdfjs-dist directly.
+ * This avoids pdf-parse v2.x constructor issues.
+ */
 
-function logShape(label, mod) {
-  try {
-    // eslint-disable-next-line no-console
-    console.error(`pdf-parse export shape (${label}):`, mod ? Object.keys(mod) : "null");
-  } catch {
-    // ignore
-  }
-}
-
-function tryLoadPdfParse() {
-  // Try main entry - pdf-parse v2.x exports PDFParse class
-  try {
-    const mod = require("pdf-parse");
-    
-    // Check if it's a function directly (v1.x style)
-    if (typeof mod === "function") return mod;
-    if (typeof mod?.default === "function") return mod.default;
-    
-    // pdf-parse v2.x: use PDFParse class
-    if (mod?.PDFParse) {
-      const PDFParse = mod.PDFParse;
-      // eslint-disable-next-line no-console
-      console.error("pdf-parse v2 detected; using PDFParse class");
-      return async (buffer) => {
-        const parser = new PDFParse();
-        const result = await parser.parse(buffer);
-        return { text: result?.text || "", numpages: result?.numPages || result?.numpages || 0 };
-      };
-    }
-    
-    logShape("cjs-main", mod);
-  } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error("pdf-parse main require failed:", err?.message);
-  }
-
-  return null;
-}
+let pdfjsLib = null;
+let loadPromise = null;
 
 async function loadPdfjs() {
-  // pdfjs-dist modern versions are ESM; use dynamic import
-  try {
-    const mod = await import("pdfjs-dist");
-    if (mod?.getDocument) return mod;
-    if (mod?.default?.getDocument) return mod.default;
+  if (pdfjsLib) return pdfjsLib;
+  if (loadPromise) return loadPromise;
+
+  loadPromise = (async () => {
+    // Try ESM import of pdfjs-dist (works in Node 22)
+    try {
+      const mod = await import("pdfjs-dist");
+      if (mod?.getDocument) {
+        pdfjsLib = mod;
+        // eslint-disable-next-line no-console
+        console.log("pdfjs-dist loaded successfully (ESM)");
+        return pdfjsLib;
+      }
+      if (mod?.default?.getDocument) {
+        pdfjsLib = mod.default;
+        // eslint-disable-next-line no-console
+        console.log("pdfjs-dist loaded successfully (ESM default)");
+        return pdfjsLib;
+      }
+      // eslint-disable-next-line no-console
+      console.error("pdfjs-dist loaded but getDocument not found:", Object.keys(mod || {}));
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("pdfjs-dist ESM import failed:", err?.message);
+    }
+
+    // Try legacy CJS paths as fallback
+    const legacyPaths = [
+      "pdfjs-dist/legacy/build/pdf.js",
+      "pdfjs-dist/legacy/build/pdf",
+      "pdfjs-dist/build/pdf",
+    ];
+    for (const p of legacyPaths) {
+      try {
+        // eslint-disable-next-line import/no-dynamic-require, global-require
+        const mod = require(p);
+        if (mod?.getDocument) {
+          pdfjsLib = mod;
+          // eslint-disable-next-line no-console
+          console.log(`pdfjs-dist loaded successfully (CJS: ${p})`);
+          return pdfjsLib;
+        }
+      } catch {
+        // try next
+      }
+    }
+
     // eslint-disable-next-line no-console
-    console.error("pdfjs-dist loaded but getDocument not found:", Object.keys(mod));
-  } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error("pdfjs-dist import failed:", err?.message);
-  }
-  return null;
+    console.error("pdfjs-dist could not be loaded from any path");
+    return null;
+  })();
+
+  return loadPromise;
 }
 
-async function resolvePdfParse() {
-  if (pdfParseFn) return pdfParseFn;
-  const loaded = tryLoadPdfParse();
-  if (loaded) {
-    pdfParseFn = loaded;
-    return pdfParseFn;
-  }
-
-  // Fallback: minimal text extractor using pdfjs-dist
-  pdfParseFn = async (buffer) => {
-    const pdfjs = await loadPdfjs();
-    if (!pdfjs || !pdfjs.getDocument) {
-      throw new Error("pdfjs-dist unavailable");
-    }
-    // Convert Buffer to Uint8Array for pdfjs
-    const data = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
-    const doc = await pdfjs.getDocument({ data }).promise;
-    let text = "";
-    for (let i = 1; i <= doc.numPages; i += 1) {
-      // eslint-disable-next-line no-await-in-loop
-      const page = await doc.getPage(i);
-      // eslint-disable-next-line no-await-in-loop
-      const content = await page.getTextContent();
-      const str = content.items.map((it) => it.str || "").join(" ");
-      text += `${str}\n`;
-    }
-    return { text, numpages: doc.numPages };
-  };
-  // eslint-disable-next-line no-console
-  console.error("pdf-parse not callable; using pdfjs-dist fallback");
-  return pdfParseFn;
-}
-
+/**
+ * Extract text from a PDF buffer using pdfjs-dist directly.
+ * @param {Buffer} buffer - Node.js Buffer containing PDF data
+ * @returns {Promise<{text: string, pageCount: number}>}
+ */
 async function extractPdfText(buffer) {
   if (!buffer || !Buffer.isBuffer(buffer)) {
     throw new Error("extractPdfText expected a Node Buffer");
   }
-  const parse = await resolvePdfParse();
-  const data = await parse(buffer);
+
+  const pdfjs = await loadPdfjs();
+  if (!pdfjs || typeof pdfjs.getDocument !== "function") {
+    throw new Error("pdfjs-dist unavailable - cannot extract PDF text");
+  }
+
+  // Convert Node Buffer to Uint8Array (required by pdfjs)
+  const data = new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+
+  // Load the PDF document
+  const loadingTask = pdfjs.getDocument({
+    data,
+    // Disable workers in Node.js environment
+    disableFontFace: true,
+    isEvalSupported: false,
+  });
+
+  const doc = await loadingTask.promise;
+  const numPages = doc.numPages;
+  const textParts = [];
+
+  for (let pageNum = 1; pageNum <= numPages; pageNum += 1) {
+    // eslint-disable-next-line no-await-in-loop
+    const page = await doc.getPage(pageNum);
+    // eslint-disable-next-line no-await-in-loop
+    const content = await page.getTextContent();
+
+    // Extract text items and join with spaces
+    const pageText = content.items
+      .map((item) => item.str || "")
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    if (pageText) {
+      textParts.push(pageText);
+    }
+  }
+
   return {
-    text: (data?.text || "").trim(),
-    pageCount: data?.numpages || 0,
+    text: textParts.join("\n").trim(),
+    pageCount: numPages,
   };
 }
 
