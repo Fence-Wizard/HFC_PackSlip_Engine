@@ -94,3 +94,4 @@ if (!pdfPath) {
 
 testOcr(pdfPath).catch(console.error);
 
+

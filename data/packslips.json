@@ -1396,6 +1396,80 @@
         "method": "ocr",
         "pages": 1
       }
+    },
+    {
+      "id": "f2825ade-a615-4441-9875-f8b3d7c0756c",
+      "status": "review",
+      "file": {
+        "originalName": "2523135 - Pack Slip.pdf",
+        "mimeType": "application/pdf",
+        "size": 86942,
+        "storedPath": "data\\uploads\\1767194362240-5d3c6b13-3707-4650-8a95-e9105289ceea.pdf",
+        "fileName": "1767194362240-5d3c6b13-3707-4650-8a95-e9105289ceea.pdf",
+        "publicUrl": "http://localhost:3030/files/1767194362240-5d3c6b13-3707-4650-8a95-e9105289ceea.pdf"
+      },
+      "extractedText": "iT vR IEA Remit Payment fo: PACK SLIP §:08-158369 Pgiof1]\ny ST p S Stephens Pipe & Steel, LLC Billing Date :12/22/2025\nP.O. Box 618 Customer Acct: 37091\nPIPESSTEEL  pooson Springs, KY 42642 ~~ Payment Terms: NET-60\n4301 46th Street ’ Customer PO #:2523135\nBladensburg, MD 20710 Visit our website: Sales Person :J.KELLY-D.BRAY\n(301) 699-0400 https://SPSfence.com Made By User :madisonrossi\nSales Fax: (978) 250-5320 SPS Order # :43221-0\nSales Phone: (866) 792-5295 Shipped Via :0T\nContact Name :TIFFANY- 804-477-8238 (\n* Quote valid 10 days. Expires: 1/1/2026 * Fax number  : 8043536039\nSh Note: DEL MON-FRI 10-2:30 CALL 48 HR IN fa\nSold To:HURRICANE FENCE CO @ VA Ship To: HURRICANE FENCE CO @ VA\nPO BOX 27527 (804) 353-6030\nRICHMOND, VA 23261-7527 1300 DINNEEN STREET\nRICHMOND, VA 23220\n** Send Invoice by EMAIL ONLY.\nCUSTOMER MUST D VERIFY ALL MATERIALS. SPS IS NOT RESPONSIBLE FOR FINAL QUANTITIES OR TAKEOFFS!\n** Your signature means you received all\n** items accurately. Please verify all items\n** at the time of receipt.\nwx\n** VERIFY SELVAGE\nEEE BLK VNL 2B 2x8(9core)x96in KT 50ft/rll\n** VERIFY SELVAGE\n|\n|\nMATERIALS RECEIVED BY: (I2N PRINT Name: DATE : iy ) AST\nSIGNATURE ACKNOWLEDGES RECEIPT OF ALL MATERIAL(S) AS LISTED.\nReview all Items. Any discrepdncies/MUST BE noted on original delivery document and VERIFIED BY DRIVER. Buyer agrees to pay all |\napplicable taxes. Invoices Se iithin terms will be charged a 1.5% monthly service charge. If payment made with credit card,\nJa 2% convenience fee will be addgd. PRICES MAY CHANGE WITHOUT NOTICE! Returns subject to 15-50% Restock Fee. LBS:2,273 2/D:12-22,",
+      "lineItems": [
+        {
+          "sku": "",
+          "description": "Street ’ Customer PO #:2523135",
+          "quantity": 46,
+          "unit": "th",
+          "price": 0,
+          "notes": ""
+        }
+      ],
+      "metadata": {},
+      "errors": [],
+      "createdAt": "2025-12-31T15:19:22.241Z",
+      "updatedAt": "2025-12-31T15:19:41.288Z",
+      "submittedAt": null,
+      "vendorId": "stephens-pipe-steel",
+      "vendorSource": "user",
+      "manualIntervention": false,
+      "extractMeta": {
+        "method": "ocr",
+        "pages": 1
+      },
+      "vendorConfidence": 1,
+      "vendorName": "Stephens Pipe & Steel"
+    },
+    {
+      "id": "2d50f7fa-7668-47b5-9c36-b72ef121a956",
+      "status": "review",
+      "file": {
+        "originalName": "2522395 - Pack Slip.pdf",
+        "mimeType": "application/pdf",
+        "size": 90906,
+        "storedPath": "data\\uploads\\1767194845519-79716acb-b44f-49f3-a143-0e688d4989bd.pdf",
+        "fileName": "1767194845519-79716acb-b44f-49f3-a143-0e688d4989bd.pdf",
+        "publicUrl": "http://localhost:3030/files/1767194845519-79716acb-b44f-49f3-a143-0e688d4989bd.pdf"
+      },
+      "extractedText": "| a ) Remit Payment to: PACK SLIP #:08-158170 Pg1of1\nRg MEA Stephens Pipe & Steel, LLC Billing Date :12/18/2025\na J P.O. Box 618 Customer Acct: 37091\n\" PIPESSTEEL  piiccel Springs, KY 42642 ~~ Payment Terms: NET-60\n4301 46th Street ’ Customer PO #:2522395\nBladensburg, MD 20710 Visit our website: Sales Person : J.KELLY-D.BRAY\n(301) 699-0400 https://SPSfence.com Made By User : jenniferkelly\nSales Fax: (978) 250-5320 SPS Order # :43184-0\nSales Phone: (866) 792-5295 Shipped Via :0T\nContact Name : TIFFANY- 804-477-823§(\n* Quote valid 10 days. Expires: 12/28/2025 * Fax number  :8043536039 |\nSh Note: DEL MON-FRI 10-2:30 CALL 48 HR IN |p\nSold To:HURRICANE FENCE CO @ VA Ship To: HURRICANE FENCE CO @ VA\nPO BOX 27527 (804) 353-6030\nRICHMOND, VA 23261-7527 1300 DINNEEN STREET\nRICHMOND, VA 23220\n** Send Invoice by EMAIL ONLY.\nCUSTOM, D M. ~ SPS IS NOT RESPONSIBLE FOR FINAL QUANTITIES OR TAKEOFFS!\n** Your signature means you received all\n** jtems accurately. Please verify all items\n** at the time of receipt.\n*%\n200] 200] O|ft |BLK VNL Ext 2x9(13core)x36in KK 50ft/rl 7 ri1\n15 15]  O|pc |BLKVNL 2-1/2\" x 6' x SP20 I\n10] 10] __ Olpc |BLKVNL 2x6 xSP20 I\n/ /\n)\nMATERIALS RECEIVED BY; J PRINT Name: DATE : ) 7 / 30, 5\nIGNATURE ACKNOWLEDGES RECEIPT OF ALL MATERIAL(S) AS LISTED.\nReview all Items. Any discrepancies MUST BE noted on original delivery document and VERIFIED BY DRIVER. Buyer agrees to pay all\napplicable taxes. Invoices notlpaid within terms will be charged a 1.5% monthly service charge. If payment made with credit card,\nla 29 convenience fee will be added. PRICES MAY CHANGE WITHOUT NOTICE! Returns subject to 15-50% Restock Fee. LBS:532 P/D:12-19)",
+      "lineItems": [
+        {
+          "sku": "",
+          "description": "a J P.O. Box 618 Customer Acct:",
+          "quantity": 37091,
+          "unit": "ea",
+          "price": 0,
+          "notes": ""
+        }
+      ],
+      "metadata": {},
+      "errors": [],
+      "createdAt": "2025-12-31T15:27:25.521Z",
+      "updatedAt": "2025-12-31T15:31:36.092Z",
+      "submittedAt": null,
+      "vendorId": "stephens-pipe-steel",
+      "vendorSource": "user",
+      "manualIntervention": false,
+      "extractMeta": {
+        "method": "ocr",
+        "pages": 1
+      },
+      "vendorConfidence": 1,
+      "vendorName": "Stephens Pipe & Steel"
     }
   ]
 }

@@ -83,16 +83,54 @@ function cleanDescription(desc) {
 function parse(lines, profile = null) {
   const items = [];
   
-  // Find header row
+  // Find header row - REQUIRED for SPS format
   const headerIdx = lines.findIndex(
     (l) => /ordered/i.test(l) && /shipped/i.test(l)
   );
   
+  // If no header found, this isn't a proper SPS line items section
+  if (headerIdx === -1) {
+    logger.warn("SPS parser: No 'Ordered/Shipped' header found - skipping");
+    return items;
+  }
+  
   // Stop markers
   const stopRe = /(materials received|signature acknowledges|review all items|print name|date:|received by|ask me about)/i;
-  const skipRe = /^\*+|your signature|items accurately|at the time|verify selvage|colanna/i;
   
-  const startIdx = headerIdx >= 0 ? headerIdx + 1 : 0;
+  // Skip patterns - addresses, metadata, headers
+  const skipRe = new RegExp([
+    /^\*+/,                          // Lines starting with asterisks
+    /your signature/i,
+    /items accurately/i,
+    /at the time/i,
+    /verify selvage/i,
+    /colanna/i,
+    /customer acct/i,
+    /payment terms/i,
+    /customer po/i,
+    /visit our website/i,
+    /sales person/i,
+    /sales fax/i,
+    /sales phone/i,
+    /contact name/i,
+    /fax number/i,
+    /shipped via/i,
+    /quote valid/i,
+    /sold to/i,
+    /ship to/i,
+    /po box/i,
+    /\d+\s*(st|nd|rd|th)\s+street/i,  // "46th Street", "1st Avenue" etc.
+    /\d+\s+\w+\s+(street|st|avenue|ave|road|rd|drive|dr|boulevard|blvd|lane|ln|way|court|ct)/i,
+    /^\d{5}(-\d{4})?$/,               // ZIP codes
+    /^[A-Z]{2}\s+\d{5}/,              // State ZIP (e.g., "VA 23220")
+    /richmond|bladensburg|maryland|virginia/i,  // Common address cities
+    /hurricane fence/i,               // Company names in addresses
+    /email only/i,
+    /not responsible/i,
+    /verify all materials/i,
+  ].map(r => r.source).join('|'), 'i');
+  
+  const startIdx = headerIdx + 1;
   
   for (let i = startIdx; i < lines.length; i++) {
     let line = cleanLine(lines[i]);

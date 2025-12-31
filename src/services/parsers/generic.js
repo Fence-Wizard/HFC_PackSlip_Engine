@@ -66,8 +66,32 @@ function parse(lines, profile = null) {
   // Stop markers - common footer text
   const stopRe = /(signature|received by|total order|terms|conditions|materials received|print name|thank you)/i;
   
-  // Skip markers - headers and metadata
-  const skipRe = /^(ordered|shipped|description|item|product|qty|quantity|unit|price|amount|total|page|date|order|customer|ship|sold|bill|invoice|pack|delivery|your signature|verify|po\s*#|invoice\s*#)/i;
+  // Skip markers - headers, metadata, and addresses
+  const skipRe = new RegExp([
+    /^(ordered|shipped|description|item|product|qty|quantity|unit|price|amount|total|page|date|order|customer|ship|sold|bill|invoice|pack|delivery|your signature|verify|po\s*#|invoice\s*#)/i.source,
+    /customer acct/i.source,
+    /payment terms/i.source,
+    /customer po/i.source,
+    /visit our website/i.source,
+    /sales person/i.source,
+    /sales fax/i.source,
+    /sales phone/i.source,
+    /contact name/i.source,
+    /fax number/i.source,
+    /shipped via/i.source,
+    /quote valid/i.source,
+    /sold to/i.source,
+    /ship to/i.source,
+    /po box/i.source,
+    /\d+\s*(st|nd|rd|th)\s+street/i.source,  // "46th Street"
+    /\d+\s+\w+\s+(street|st|avenue|ave|road|rd|drive|dr|boulevard|blvd|lane|ln|way|court|ct)/i.source,
+    /^\d{5}(-\d{4})?$/.source,               // ZIP codes
+    /email only/i.source,
+    /not responsible/i.source,
+    /verify all materials/i.source,
+    /remit payment/i.source,
+    /billing date/i.source,
+  ].join('|'), 'i');
   
   for (let i = 0; i < lines.length; i++) {
     const rawLine = lines[i];

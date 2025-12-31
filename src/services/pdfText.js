@@ -65,8 +65,9 @@ async function extractPdfText(buffer) {
     // Fall back to OCR for scanned PDFs
     logger.info("PDF appears to be scanned, falling back to OCR...");
     
-    // Render pages as images
-    const screenshotResult = await parser.getScreenshot({ scale: 2 });
+    // Render pages as images at higher resolution for better OCR
+    // Scale 3 = 216 DPI equivalent (better for table text)
+    const screenshotResult = await parser.getScreenshot({ scale: 3, format: "png" });
     await parser.destroy();
     parser = null;
     
@@ -75,24 +76,40 @@ async function extractPdfText(buffer) {
       return { text: "", pageCount, method: "ocr-failed" };
     }
     
-    // OCR each page
+    logger.info(`Generated ${screenshotResult.pages.length} page images for OCR`);
+    
+    // OCR each page with optimized settings
     const Tesseract = require("tesseract.js");
     const textParts = [];
     
     for (let i = 0; i < screenshotResult.pages.length; i++) {
       const pageData = screenshotResult.pages[i].data;
-      if (!pageData) continue;
+      if (!pageData) {
+        logger.warn(`Page ${i + 1} has no image data`);
+        continue;
+      }
+      
+      // Log image size for debugging
+      const imgSize = pageData.length || pageData.byteLength || 0;
+      logger.info(`OCR page ${i + 1}: image size ${Math.round(imgSize / 1024)} KB`);
       
       try {
         const { data: { text } } = await Tesseract.recognize(
           pageData,
           'eng',
-          { logger: () => {} }
+          { 
+            logger: () => {},
+            // Tesseract parameters for better table/document recognition
+            tessedit_pageseg_mode: '6', // Assume uniform block of text
+          }
         );
         if (text?.trim()) {
           textParts.push(text.trim());
+          // Log first 500 chars of each page for debugging
+          logger.info(`OCR page ${i + 1}: ${text.length} chars. Preview: ${text.substring(0, 300).replace(/\n/g, ' | ')}`);
+        } else {
+          logger.warn(`OCR page ${i + 1}: no text extracted`);
         }
-        logger.info(`OCR page ${i + 1}: ${text?.length || 0} chars`);
       } catch (ocrErr) {
         logger.warn(`OCR failed on page ${i + 1}:`, ocrErr?.message);
       }
@@ -100,6 +117,13 @@ async function extractPdfText(buffer) {
     
     const ocrText = textParts.join("\n\n").trim();
     logger.info(`OCR complete: ${ocrText.length} total chars from ${screenshotResult.pages.length} pages`);
+    
+    // Check if we found line items header (for SPS pack slips)
+    if (/ordered.*shipped/i.test(ocrText)) {
+      logger.info("OCR captured line items header - table data should be present");
+    } else {
+      logger.warn("OCR did NOT capture 'Ordered/Shipped' header - line items table may be missing");
+    }
     
     return {
       text: ocrText || "(No text could be extracted)",
