@@ -1,6 +1,6 @@
 /**
  * PDF text extraction with multiple fallback strategies.
- * Tries pdf-parse v2.x first, then falls back to pdfjs-dist.
+ * Tries unpdf first (modern library), then pdf-parse, then pdfjs-dist.
  */
 
 const logger = require("../config/logger");
@@ -8,70 +8,36 @@ const logger = require("../config/logger");
 let extractorFn = null;
 
 /**
- * Try to set up pdf-parse v2.x extractor
+ * Try to set up unpdf extractor (modern, reliable library)
  */
-function tryPdfParseV2() {
+async function tryUnpdf() {
   try {
-    const pdfParse = require("pdf-parse");
+    const { extractText } = await import("unpdf");
+    logger.info("Using unpdf for PDF extraction");
     
-    // Check if it's v2.x with PDFParse class
-    if (pdfParse.PDFParse) {
-      const PDFParse = pdfParse.PDFParse;
-      logger.info("Using pdf-parse v2.x with PDFParse class");
+    return async (buffer) => {
+      // unpdf expects Uint8Array
+      const uint8 = new Uint8Array(buffer);
+      const result = await extractText(uint8);
       
-      return async (buffer) => {
-        // PDFParse v2.x requires options with verbosity
-        const parser = new PDFParse({
-          verbosity: 0, // Suppress warnings
-          max: 0, // No page limit
-        });
-        
-        const result = await parser.parse(buffer);
-        return {
-          text: result?.text || "",
-          pageCount: result?.numPages || result?.numpages || 0,
-        };
+      // unpdf returns { text, totalPages }
+      return {
+        text: result?.text || "",
+        pageCount: result?.totalPages || 0,
       };
-    }
-    
-    // Check if it's v1.x style (function directly)
-    if (typeof pdfParse === "function") {
-      logger.info("Using pdf-parse v1.x style");
-      return async (buffer) => {
-        const result = await pdfParse(buffer);
-        return {
-          text: result?.text || "",
-          pageCount: result?.numpages || 0,
-        };
-      };
-    }
-    
-    // Check for default export
-    if (typeof pdfParse.default === "function") {
-      logger.info("Using pdf-parse default export");
-      return async (buffer) => {
-        const result = await pdfParse.default(buffer);
-        return {
-          text: result?.text || "",
-          pageCount: result?.numpages || 0,
-        };
-      };
-    }
-    
-    logger.warn("pdf-parse found but no usable export:", Object.keys(pdfParse));
+    };
   } catch (err) {
-    logger.warn("pdf-parse not available:", err?.message);
+    logger.warn("unpdf not available:", err?.message);
   }
   
   return null;
 }
 
 /**
- * Set up pdfjs-dist extractor as fallback
+ * Try to set up pdfjs-dist extractor as fallback
  */
 async function tryPdfjsDist() {
   try {
-    // Try ESM import
     const pdfjs = await import("pdfjs-dist");
     const getDocument = pdfjs.getDocument || pdfjs.default?.getDocument;
     
@@ -83,7 +49,6 @@ async function tryPdfjsDist() {
     logger.info("Using pdfjs-dist for PDF extraction");
     
     return async (buffer) => {
-      // Convert Buffer to Uint8Array
       const uint8Array = new Uint8Array(buffer.length);
       for (let i = 0; i < buffer.length; i++) {
         uint8Array[i] = buffer[i];
@@ -105,7 +70,6 @@ async function tryPdfjsDist() {
           const content = await page.getTextContent();
           
           if (content.items && content.items.length > 0) {
-            // Group by Y coordinate for line preservation
             const lines = {};
             for (const item of content.items) {
               if (!item.str) continue;
@@ -114,7 +78,6 @@ async function tryPdfjsDist() {
               lines[y].push({ x: item.transform?.[4] || 0, text: item.str });
             }
             
-            // Sort by Y (descending) and X (ascending)
             const sortedYs = Object.keys(lines).map(Number).sort((a, b) => b - a);
             for (const y of sortedYs) {
               lines[y].sort((a, b) => a.x - b.x);
@@ -145,11 +108,11 @@ async function tryPdfjsDist() {
 async function initExtractor() {
   if (extractorFn) return extractorFn;
   
-  // Try pdf-parse v2.x first (it uses a newer pdfjs-dist internally)
-  extractorFn = tryPdfParseV2();
+  // Try unpdf first (modern, reliable)
+  extractorFn = await tryUnpdf();
   if (extractorFn) return extractorFn;
   
-  // Fall back to direct pdfjs-dist
+  // Fall back to pdfjs-dist
   extractorFn = await tryPdfjsDist();
   if (extractorFn) return extractorFn;
   
@@ -177,7 +140,6 @@ async function extractPdfText(buffer) {
     return result;
   } catch (err) {
     logger.error("PDF extraction failed:", err?.message);
-    // Return empty result instead of throwing
     return { text: "", pageCount: 0 };
   }
 }
