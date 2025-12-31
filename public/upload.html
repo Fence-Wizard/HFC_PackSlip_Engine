@@ -30,9 +30,20 @@
           Drop a PDF or image. We’ll extract text and prepare it for confirmation.
         </p>
 
+        <!-- Vendor Selection -->
+        <div class="mt-6">
+          <label for="vendorSelect" class="block text-sm font-medium text-slate-700 mb-2">
+            Vendor <span class="text-slate-400">(optional - auto-detect if blank)</span>
+          </label>
+          <select id="vendorSelect" class="w-full px-3 py-2 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-slate-900/20 focus:border-slate-400">
+            <option value="">Auto-detect vendor</option>
+            <!-- Options loaded dynamically -->
+          </select>
+        </div>
+
         <!-- Dropzone -->
         <div id="dropzone"
-             class="mt-6 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 hover:bg-slate-100/60 transition p-8 text-center cursor-pointer">
+             class="mt-4 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 hover:bg-slate-100/60 transition p-8 text-center cursor-pointer">
           <div class="mx-auto w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center">
             ⬆️
           </div>
@@ -104,7 +115,7 @@
 
   <script type="module">
     import { toast } from "/assets/ui.js";
-    import { uploadFile } from "/assets/api.js";
+    import { uploadFile, apiGet } from "/assets/api.js";
 
     const dropzone = document.getElementById("dropzone");
     const fileInput = document.getElementById("fileInput");
@@ -115,8 +126,54 @@
     const clearBtn = document.getElementById("clearBtn");
     const pct = document.getElementById("pct");
     const bar = document.getElementById("bar");
+    const vendorSelect = document.getElementById("vendorSelect");
 
     let file = null;
+
+    // Load vendors on page load
+    async function loadVendors() {
+      try {
+        const data = await apiGet("/api/vendors");
+        if (data?.vendors) {
+          // Add separator for vendors with profiles
+          const withProfile = data.vendors.filter(v => v.hasProfile);
+          const withoutProfile = data.vendors.filter(v => !v.hasProfile);
+          
+          if (withProfile.length > 0) {
+            const optGroup1 = document.createElement("optgroup");
+            optGroup1.label = "— Vendors with parsing profiles —";
+            withProfile.forEach(v => {
+              const opt = document.createElement("option");
+              opt.value = v.id;
+              opt.textContent = v.name + " ✓";
+              optGroup1.appendChild(opt);
+            });
+            vendorSelect.appendChild(optGroup1);
+          }
+          
+          if (withoutProfile.length > 0) {
+            const optGroup2 = document.createElement("optgroup");
+            optGroup2.label = "— Other vendors (generic parser) —";
+            withoutProfile.forEach(v => {
+              const opt = document.createElement("option");
+              opt.value = v.id;
+              opt.textContent = v.name;
+              optGroup2.appendChild(opt);
+            });
+            vendorSelect.appendChild(optGroup2);
+          }
+          
+          // Add manual option at the end
+          const manualOpt = document.createElement("option");
+          manualOpt.value = "_manual";
+          manualOpt.textContent = "⚠️ Unknown / Other Vendor";
+          vendorSelect.appendChild(manualOpt);
+        }
+      } catch (err) {
+        console.error("Failed to load vendors:", err);
+      }
+    }
+    loadVendors();
 
     function setFile(f) {
       file = f;
@@ -172,10 +229,12 @@
       uploadBtn.disabled = true;
       uploadBtn.textContent = "Uploading…";
       try {
+        // Include vendor in upload
+        const vendorId = vendorSelect.value || "";
         const res = await uploadFile("/api/upload", file, (p) => {
           pct.textContent = `${p}%`;
           bar.style.width = `${p}%`;
-        });
+        }, { vendorId });
         if (!res?.id) throw new Error("Upload succeeded but no id returned.");
         toast("Uploaded. Redirecting to review…", "success");
         window.location.href = `/review.html?id=${encodeURIComponent(res.id)}`;

@@ -42,9 +42,41 @@
         </div>
       </div>
 
+      <!-- Vendor Selection Bar -->
+      <div id="vendorBar" class="mt-5 p-4 rounded-xl border border-slate-200 bg-slate-50 hidden">
+        <div class="flex flex-wrap items-center gap-4">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-medium">Vendor:</span>
+            <select id="vendorSelect" class="px-3 py-2 border border-slate-300 rounded-xl bg-white text-sm focus:ring-2 focus:ring-slate-900/20">
+              <option value="">Auto-detect</option>
+            </select>
+          </div>
+          <div id="vendorStatus" class="text-sm text-slate-600"></div>
+          <button id="reparseVendorBtn" class="ml-auto px-4 py-2 rounded-xl bg-slate-800 text-white text-sm hover:bg-slate-700">
+            Re-parse with selected vendor
+          </button>
+        </div>
+        <!-- Manual intervention alert -->
+        <div id="manualAlert" class="mt-3 p-3 rounded-lg bg-amber-50 border border-amber-200 hidden">
+          <div class="flex items-start gap-3">
+            <span class="text-amber-500 text-lg">⚠️</span>
+            <div class="flex-1">
+              <div class="font-medium text-amber-800">No parsing profile for this vendor</div>
+              <div class="text-sm text-amber-700 mt-1">
+                This vendor doesn't have a custom parsing profile yet. 
+                Line items may need manual review.
+              </div>
+              <button id="flagProfileBtn" class="mt-2 px-3 py-1.5 rounded-lg bg-amber-500 text-white text-sm hover:bg-amber-600">
+                Request Profile Creation
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="mt-5 grid gap-4 md:grid-cols-3">
         <div>
-          <label class="text-xs font-medium text-slate-600">Vendor</label>
+          <label class="text-xs font-medium text-slate-600">Vendor Name</label>
           <input id="vendor" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/20"
             placeholder="e.g., ABC Supply" />
         </div>
@@ -132,13 +164,73 @@
     const extractedTextEl = qs("#extractedText");
 
     const copyTextBtn = qs("#copyTextBtn");
+    
+    // Vendor-related elements
+    const vendorBar = qs("#vendorBar");
+    const vendorSelect = qs("#vendorSelect");
+    const vendorStatus = qs("#vendorStatus");
+    const reparseVendorBtn = qs("#reparseVendorBtn");
+    const manualAlert = qs("#manualAlert");
+    const flagProfileBtn = qs("#flagProfileBtn");
 
     let pack = null;
+    let vendorsList = [];
 
     if (!id) {
       toast("Missing pack slip id in URL. Go back and upload again.", "error", 7000);
     } else {
+      loadVendors();
       load();
+    }
+    
+    async function loadVendors() {
+      try {
+        const data = await apiGet("/api/vendors");
+        vendorsList = data?.vendors || [];
+        populateVendorSelect();
+      } catch (e) {
+        console.error("Failed to load vendors:", e);
+      }
+    }
+    
+    function populateVendorSelect() {
+      // Clear existing options except first
+      while (vendorSelect.options.length > 1) {
+        vendorSelect.remove(1);
+      }
+      
+      const withProfile = vendorsList.filter(v => v.hasProfile);
+      const withoutProfile = vendorsList.filter(v => !v.hasProfile);
+      
+      if (withProfile.length > 0) {
+        const optGroup1 = document.createElement("optgroup");
+        optGroup1.label = "— With parsing profiles —";
+        withProfile.forEach(v => {
+          const opt = document.createElement("option");
+          opt.value = v.id;
+          opt.textContent = v.name + " ✓";
+          optGroup1.appendChild(opt);
+        });
+        vendorSelect.appendChild(optGroup1);
+      }
+      
+      if (withoutProfile.length > 0) {
+        const optGroup2 = document.createElement("optgroup");
+        optGroup2.label = "— Generic parser —";
+        withoutProfile.forEach(v => {
+          const opt = document.createElement("option");
+          opt.value = v.id;
+          opt.textContent = v.name;
+          optGroup2.appendChild(opt);
+        });
+        vendorSelect.appendChild(optGroup2);
+      }
+      
+      // Manual option
+      const manualOpt = document.createElement("option");
+      manualOpt.value = "_manual";
+      manualOpt.textContent = "⚠️ Unknown Vendor";
+      vendorSelect.appendChild(manualOpt);
     }
 
     async function load() {
@@ -161,6 +253,37 @@
       extractedTextEl.textContent = p.extractedText || "(No extracted text yet.)";
 
       renderItems(Array.isArray(p.lineItems) ? p.lineItems : []);
+      
+      // Update vendor bar
+      updateVendorBar(p.vendorInfo);
+    }
+    
+    function updateVendorBar(vendorInfo) {
+      vendorBar.classList.remove("hidden");
+      
+      // Set the dropdown to current vendor
+      if (vendorInfo?.id) {
+        vendorSelect.value = vendorInfo.id;
+      } else {
+        vendorSelect.value = "";
+      }
+      
+      // Update status text
+      if (vendorInfo?.source === "user") {
+        vendorStatus.innerHTML = `<span class="text-green-600">✓ User selected</span>: ${vendorInfo.name || "Unknown"}`;
+      } else if (vendorInfo?.source === "auto") {
+        const confidence = Math.round((vendorInfo.confidence || 0) * 100);
+        vendorStatus.innerHTML = `<span class="text-blue-600">⚡ Auto-detected</span>: ${vendorInfo.name || "Unknown"} (${confidence}% confidence)`;
+      } else {
+        vendorStatus.innerHTML = `<span class="text-slate-500">No vendor detected</span>`;
+      }
+      
+      // Show manual alert if needed
+      if (vendorInfo?.manualIntervention || (vendorInfo?.id && !vendorInfo?.hasProfile)) {
+        manualAlert.classList.remove("hidden");
+      } else {
+        manualAlert.classList.add("hidden");
+      }
     }
 
     function renderItems(items) {
@@ -257,6 +380,47 @@
       } finally {
         autoParseBtn.disabled = false;
         autoParseBtn.textContent = "Re-run best-effort parse";
+      }
+    });
+    
+    // Re-parse with selected vendor
+    reparseVendorBtn.addEventListener("click", async () => {
+      if (!id) return toast("Missing id", "error");
+      const selectedVendorId = vendorSelect.value;
+      
+      reparseVendorBtn.disabled = true;
+      reparseVendorBtn.textContent = "Parsing…";
+      try {
+        const updated = await apiPost(`/api/packs/${encodeURIComponent(id)}/reparse`, { 
+          vendorId: selectedVendorId 
+        });
+        hydrate(updated);
+        toast("Re-parse complete with vendor profile.", "success");
+      } catch (e) {
+        // toast handled in api.js
+      } finally {
+        reparseVendorBtn.disabled = false;
+        reparseVendorBtn.textContent = "Re-parse with selected vendor";
+      }
+    });
+    
+    // Flag for profile creation
+    flagProfileBtn.addEventListener("click", async () => {
+      if (!pack?.vendorInfo?.id) {
+        toast("No vendor selected to flag.", "warning");
+        return;
+      }
+      
+      try {
+        await apiPost(`/api/vendors/${encodeURIComponent(pack.vendorInfo.id)}/flag`, {
+          packSlipId: id,
+          reason: "Parsing profile requested from review page"
+        });
+        toast("Profile creation request submitted!", "success");
+        flagProfileBtn.textContent = "✓ Request Sent";
+        flagProfileBtn.disabled = true;
+      } catch (e) {
+        // toast handled in api.js
       }
     });
 

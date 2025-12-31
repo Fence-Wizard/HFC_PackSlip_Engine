@@ -12,9 +12,16 @@ export async function apiPost(url, body, opts = {}) {
   });
 }
 
-export async function uploadFile(url, file, onProgress) {
+export async function uploadFile(url, file, onProgress, extraFields = {}) {
   const form = new FormData();
   form.append("file", file);
+  
+  // Add any extra fields (like vendorId)
+  for (const [key, value] of Object.entries(extraFields)) {
+    if (value !== undefined && value !== null && value !== "") {
+      form.append(key, value);
+    }
+  }
 
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();

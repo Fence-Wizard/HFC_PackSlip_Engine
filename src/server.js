@@ -10,6 +10,7 @@ const uploadRouter = require("./routes/upload");
 const reviewRouter = require("./routes/review");
 const submitRouter = require("./routes/submit");
 const packsRouter = require("./routes/packs");
+const vendorsRouter = require("./routes/vendors");
 const errorHandler = require("./middleware/errorHandler");
 
 loadConfig();
@@ -51,6 +52,7 @@ app.use("/api", uploadRouter);
 app.use("/api", reviewRouter);
 app.use("/api", submitRouter);
 app.use("/api", packsRouter);
+app.use("/api/vendors", vendorsRouter);
 app.use("/", healthRouter);
 
 // Friendly redirect for root

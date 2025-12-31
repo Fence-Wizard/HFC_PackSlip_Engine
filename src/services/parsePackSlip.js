@@ -1,9 +1,12 @@
 /**
  * Multi-format pack slip parser with OCR text support.
  * Supports multiple supplier formats and auto-detects based on document content.
+ * 
+ * Uses modular vendor-specific parsers from ./parsers/
  */
 
 const logger = require("../config/logger");
+const { parseWithProfile, getParser } = require("./parsers");
 
 function toNum(val) {
   if (val == null) return null;
@@ -288,8 +291,10 @@ function detectFormat(text) {
 /**
  * Main entry point: parse extracted text into line items.
  * Handles OCR text with cleanup and flexible parsing.
+ * @param {string} text - Extracted text from pack slip
+ * @param {Object|null} vendorProfile - Vendor profile with parser info
  */
-function parsePackSlip(text) {
+function parsePackSlip(text, vendorProfile = null) {
   if (!text || !text.trim()) {
     logger.warn("parsePackSlip: empty text provided");
     return [];
@@ -301,34 +306,48 @@ function parsePackSlip(text) {
     .map((l) => cleanOcrLine(l))
     .filter((l) => l.length > 0);
 
-  const format = detectFormat(text);
-  logger.info(`Pack slip format detected: ${format}, ${lines.length} lines`);
+  // Determine parser to use
+  let parserName = "generic";
+  
+  if (vendorProfile?.parser) {
+    // Use vendor-specified parser
+    parserName = vendorProfile.parser;
+    logger.info(`Using vendor-specified parser: ${parserName} for ${vendorProfile.name}`);
+  } else {
+    // Auto-detect format from text
+    parserName = detectFormat(text);
+    logger.info(`Auto-detected format: ${parserName}, ${lines.length} lines`);
+  }
 
   let items = [];
 
-  // Try format-specific parser first
-  switch (format) {
-    case "sps":
-    case "masterhalco":
+  // Use modular parser system
+  try {
+    const parser = getParser(parserName);
+    items = parser.parse(lines, vendorProfile);
+  } catch (err) {
+    logger.error("Parser error, falling back to legacy", { parser: parserName, error: err?.message });
+    // Fall back to legacy parsers if modular system fails
+    if (parserName === "sps" || parserName === "masterhalco") {
       items = parseSpsOcr(lines);
-      break;
-    default:
+    } else {
       items = parseGenericOcr(lines);
+    }
   }
 
-  // If primary parser found nothing, try generic
+  // If primary parser found nothing, try other approaches
   if (items.length === 0) {
-    logger.info("Primary parser found no items, trying generic OCR parser");
+    logger.info("Primary parser found no items, trying legacy generic OCR parser");
     items = parseGenericOcr(lines);
   }
   
   // Still nothing? Try SPS parser as last resort
   if (items.length === 0) {
-    logger.info("Generic parser found no items, trying SPS OCR parser");
+    logger.info("Generic parser found no items, trying legacy SPS OCR parser");
     items = parseSpsOcr(lines);
   }
 
-  logger.info(`parsePackSlip: found ${items.length} line items`);
+  logger.info(`parsePackSlip: found ${items.length} line items (vendor: ${vendorProfile?.name || "auto-detect"})`);
   return items;
 }
 

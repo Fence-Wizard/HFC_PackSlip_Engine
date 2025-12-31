@@ -5,21 +5,35 @@ const { sendToN8n } = require("../services/webhook");
 const { extractText } = require("../services/extractText");
 const { parsePackSlip } = require("../services/parsePackSlip");
 const { readFileBuffer } = require("../storage/files");
+const { getVendorById, detectVendor } = require("../config/vendors");
 const logger = require("../config/logger");
 
 const router = express.Router();
 
 function toApiModel(pack) {
   if (!pack) return null;
+  
+  // Get vendor info if available
+  const vendorProfile = pack.vendorId ? getVendorById(pack.vendorId) : null;
+  
   return {
     id: pack.id,
     fileName: pack.file?.originalName || pack.file?.fileName || "pack-slip",
     uploadedAt: pack.createdAt,
     extractedText: pack.extractedText || "",
     fields: {
-      vendor: pack.metadata?.vendor || "",
+      vendor: pack.metadata?.vendor || pack.vendorName || vendorProfile?.name || "",
       po: pack.metadata?.poOrJob || "",
       receivedDate: pack.metadata?.receivedDate || "",
+    },
+    // Vendor profile info for the UI
+    vendorInfo: {
+      id: pack.vendorId || null,
+      name: pack.vendorName || vendorProfile?.name || null,
+      source: pack.vendorSource || "none", // "user", "auto", "none"
+      confidence: pack.vendorConfidence || 0,
+      hasProfile: vendorProfile?.hasProfile || false,
+      manualIntervention: pack.manualIntervention || false,
     },
     lineItems: Array.isArray(pack.lineItems)
       ? pack.lineItems.map((li) => ({
@@ -91,19 +105,51 @@ router.post("/packs/:id/reparse", async (req, res) => {
     return res.status(400).json({ error: "Original file is unavailable for re-parse" });
   }
 
+  // Check if a vendorId was passed in the request body (for re-selecting vendor)
+  const newVendorId = req.body?.vendorId;
+
   try {
     const buffer = readFileBuffer(pack.file);
     const extraction = await extractText(
       { buffer, mimeType: pack.file.mimeType, fileName: pack.file.originalName },
       reqId,
     );
-    const lineItems = parsePackSlip(extraction.text);
+    
+    // Determine vendor: use new selection, existing, or auto-detect
+    let finalVendorId = newVendorId || pack.vendorId;
+    let vendorSource = pack.vendorSource || "none";
+    let vendorConfidence = pack.vendorConfidence || 0;
+    
+    if (newVendorId) {
+      vendorSource = "user";
+      vendorConfidence = 1.0;
+    } else if (!finalVendorId) {
+      // Try auto-detection on reparse
+      const detected = detectVendor(extraction.text);
+      if (detected) {
+        finalVendorId = detected.id;
+        vendorSource = "auto";
+        vendorConfidence = 0.8;
+        logger.info("Auto-detected vendor on reparse", { reqId, vendorId: detected.id });
+      }
+    }
+    
+    // Get vendor profile for parsing
+    const vendorProfile = finalVendorId && finalVendorId !== "_manual" 
+      ? getVendorById(finalVendorId) 
+      : null;
+    
+    const lineItems = parsePackSlip(extraction.text, vendorProfile);
     const updated = db.updatePackSlip(pack.id, {
       extractedText: extraction.text,
       extractMeta: {
         method: extraction.method,
         pages: extraction.pages,
       },
+      vendorId: finalVendorId,
+      vendorSource,
+      vendorConfidence,
+      vendorName: vendorProfile?.name || null,
       lineItems,
       updatedAt: now(),
       status: STATUSES.REVIEW,

@@ -6,6 +6,7 @@ const { toFileRecord, readFileBuffer } = require("../storage/files");
 const db = require("../storage/db");
 const { extractText } = require("../services/extractText");
 const { parsePackSlip } = require("../services/parsePackSlip");
+const { detectVendor, getVendorById } = require("../config/vendors");
 
 const router = express.Router();
 
@@ -28,8 +29,17 @@ router.post("/upload", upload.single("file"), async (req, res, next) => {
       .json({ error: "No file uploaded. Expected multipart field name 'file'." });
   }
 
+  // Get vendor from form data (if user selected one)
+  const vendorIdFromForm = req.body?.vendorId || "";
+
   const fileRecord = toFileRecord(req.file);
   const packSlip = createPackSlip(fileRecord);
+  
+  // Store initial vendor selection
+  packSlip.vendorId = vendorIdFromForm;
+  packSlip.vendorSource = vendorIdFromForm ? "user" : "pending";
+  packSlip.manualIntervention = vendorIdFromForm === "_manual";
+  
   db.createPackSlip(packSlip);
 
   try {
@@ -57,6 +67,26 @@ router.post("/upload", upload.single("file"), async (req, res, next) => {
       };
     }
 
+    // Auto-detect vendor from text if not manually selected
+    let finalVendorId = vendorIdFromForm;
+    let vendorSource = vendorIdFromForm ? "user" : "none";
+    let vendorConfidence = vendorIdFromForm ? 1.0 : 0;
+    
+    if (!vendorIdFromForm || vendorIdFromForm === "_manual") {
+      const detected = detectVendor(extraction.text);
+      if (detected) {
+        finalVendorId = detected.id;
+        vendorSource = "auto";
+        vendorConfidence = 0.8; // Could be refined based on match quality
+        logger.info("Auto-detected vendor", { reqId, vendorId: detected.id, vendorName: detected.name });
+      }
+    }
+    
+    // Get vendor profile for parsing
+    const vendorProfile = finalVendorId && finalVendorId !== "_manual" 
+      ? getVendorById(finalVendorId) 
+      : null;
+
     db.updatePackSlip(packSlip.id, {
       status: STATUSES.EXTRACTED,
       extractedText: extraction.text,
@@ -64,11 +94,16 @@ router.post("/upload", upload.single("file"), async (req, res, next) => {
         method: extraction.method,
         pages: extraction.pages,
       },
+      vendorId: finalVendorId,
+      vendorSource,
+      vendorConfidence,
+      vendorName: vendorProfile?.name || null,
       errors: [],
       updatedAt: now(),
     });
 
-    const lineItems = parsePackSlip(extraction.text);
+    // Parse with vendor-specific parser if available
+    const lineItems = parsePackSlip(extraction.text, vendorProfile);
     const ready = db.updatePackSlip(packSlip.id, {
       status: STATUSES.REVIEW,
       lineItems,
