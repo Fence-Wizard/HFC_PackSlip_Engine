@@ -1114,6 +1114,127 @@
         "method": "pdf-text",
         "pages": 1
       }
+    },
+    {
+      "id": "3c63a0ec-19fa-4493-bc8b-944acb8298b1",
+      "status": "review",
+      "file": {
+        "originalName": "2684_001.pdf",
+        "mimeType": "application/pdf",
+        "size": 50245,
+        "storedPath": "data\\uploads\\1767134744351-bc1ecf68-d7a5-4715-a534-e3b85a08d17a.pdf",
+        "fileName": "1767134744351-bc1ecf68-d7a5-4715-a534-e3b85a08d17a.pdf",
+        "publicUrl": "http://localhost:3030/files/1767134744351-bc1ecf68-d7a5-4715-a534-e3b85a08d17a.pdf"
+      },
+      "extractedText": "(extraction failed)",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [],
+      "createdAt": "2025-12-30T22:45:44.352Z",
+      "updatedAt": "2025-12-30T22:45:44.473Z",
+      "submittedAt": null,
+      "extractMeta": {
+        "method": "failed",
+        "pages": 0
+      }
+    },
+    {
+      "id": "536ad04b-30dd-43bc-915f-350d138421b8",
+      "status": "review",
+      "file": {
+        "originalName": "2715_001.pdf",
+        "mimeType": "application/pdf",
+        "size": 95678,
+        "storedPath": "data\\uploads\\1767135284489-fe3a0320-b0ef-43d0-90c2-8b50e2e43d7a.pdf",
+        "fileName": "1767135284489-fe3a0320-b0ef-43d0-90c2-8b50e2e43d7a.pdf",
+        "publicUrl": "http://localhost:3030/files/1767135284489-fe3a0320-b0ef-43d0-90c2-8b50e2e43d7a.pdf"
+      },
+      "extractedText": "(reparse failed)",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "Could not execute GraphicsMagick/ImageMagick: gm \"convert\" \"-density\" \"200x200\" \"-quality\" \"75\" \"-[0]\" \"-units\" \"PixelsPerInch\" \"-resize\" \"768x512!\" \"-compress\" \"jpeg\" \"C:\\Users\\SOwens\\AppData\\Local\\Temp\\pdf-ocr-gNhHES\\page.1.png\" this most likely means the gm/convert binaries can't be found"
+      ],
+      "createdAt": "2025-12-30T22:54:44.490Z",
+      "updatedAt": "2025-12-30T22:54:51.672Z",
+      "submittedAt": null,
+      "extractMeta": {
+        "method": "failed",
+        "pages": 0
+      }
+    },
+    {
+      "id": "8390fad3-bb7f-4ec5-9b66-20e9e86ae0fd",
+      "status": "review",
+      "file": {
+        "originalName": "2695_001.pdf",
+        "mimeType": "application/pdf",
+        "size": 96193,
+        "storedPath": "data\\uploads\\1767135305520-f8dbfc0e-5e2b-4173-8e2f-63744a9bb4cc.pdf",
+        "fileName": "1767135305520-f8dbfc0e-5e2b-4173-8e2f-63744a9bb4cc.pdf",
+        "publicUrl": "http://localhost:3030/files/1767135305520-f8dbfc0e-5e2b-4173-8e2f-63744a9bb4cc.pdf"
+      },
+      "extractedText": "(reparse failed)",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "Could not execute GraphicsMagick/ImageMagick: gm \"convert\" \"-density\" \"200x200\" \"-quality\" \"75\" \"-[0]\" \"-units\" \"PixelsPerInch\" \"-resize\" \"768x512!\" \"-compress\" \"jpeg\" \"C:\\Users\\SOwens\\AppData\\Local\\Temp\\pdf-ocr-8wEsaQ\\page.1.png\" this most likely means the gm/convert binaries can't be found"
+      ],
+      "createdAt": "2025-12-30T22:55:05.523Z",
+      "updatedAt": "2025-12-30T22:55:08.453Z",
+      "submittedAt": null,
+      "extractMeta": {
+        "method": "failed",
+        "pages": 0
+      }
+    },
+    {
+      "id": "77b5581d-a383-47f2-aec9-49e1352b4383",
+      "status": "review",
+      "file": {
+        "originalName": "2710_001.pdf",
+        "mimeType": "application/pdf",
+        "size": 272573,
+        "storedPath": "data\\uploads\\1767186225731-1084e51d-2af6-48f7-8306-d42ebe66b280.pdf",
+        "fileName": "1767186225731-1084e51d-2af6-48f7-8306-d42ebe66b280.pdf",
+        "publicUrl": "http://localhost:3030/files/1767186225731-1084e51d-2af6-48f7-8306-d42ebe66b280.pdf"
+      },
+      "extractedText": "(extraction failed)",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [],
+      "createdAt": "2025-12-31T13:03:45.735Z",
+      "updatedAt": "2025-12-31T13:03:46.017Z",
+      "submittedAt": null,
+      "extractMeta": {
+        "method": "failed",
+        "pages": 0
+      }
+    },
+    {
+      "id": "8e435ff5-d661-4b64-9e8c-829e54437c1f",
+      "status": "review",
+      "file": {
+        "originalName": "2766_001 (1).pdf",
+        "mimeType": "application/pdf",
+        "size": 424530,
+        "storedPath": "data\\uploads\\1767186378349-f5e451a9-f466-4067-b9f1-8c7e956f143b.pdf",
+        "fileName": "1767186378349-f5e451a9-f466-4067-b9f1-8c7e956f143b.pdf",
+        "publicUrl": "http://localhost:3030/files/1767186378349-f5e451a9-f466-4067-b9f1-8c7e956f143b.pdf"
+      },
+      "extractedText": "(reparse failed)",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [
+        "Could not execute GraphicsMagick/ImageMagick: gm \"convert\" \"-density\" \"200x200\" \"-quality\" \"75\" \"-[0]\" \"-units\" \"PixelsPerInch\" \"-resize\" \"768x512!\" \"-compress\" \"jpeg\" \"C:\\Users\\SOwens\\AppData\\Local\\Temp\\pdf-ocr-81M7K8\\page.1.png\" this most likely means the gm/convert binaries can't be found"
+      ],
+      "createdAt": "2025-12-31T13:06:18.355Z",
+      "updatedAt": "2025-12-31T13:06:27.311Z",
+      "submittedAt": null,
+      "extractMeta": {
+        "method": "failed",
+        "pages": 0
+      }
     }
   ]
 }

@@ -1,8 +1,9 @@
 /**
  * PDF text extraction using pdfjs-dist directly.
- * This avoids pdf-parse v2.x constructor issues.
  * Preserves line breaks based on Y-coordinates for table extraction.
  */
+
+const logger = require("../config/logger");
 
 let pdfjsLib = null;
 let loadPromise = null;
@@ -17,20 +18,16 @@ async function loadPdfjs() {
       const mod = await import("pdfjs-dist");
       if (mod?.getDocument) {
         pdfjsLib = mod;
-        // eslint-disable-next-line no-console
         console.log("pdfjs-dist loaded successfully (ESM)");
         return pdfjsLib;
       }
       if (mod?.default?.getDocument) {
         pdfjsLib = mod.default;
-        // eslint-disable-next-line no-console
         console.log("pdfjs-dist loaded successfully (ESM default)");
         return pdfjsLib;
       }
-      // eslint-disable-next-line no-console
       console.error("pdfjs-dist loaded but getDocument not found:", Object.keys(mod || {}));
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error("pdfjs-dist ESM import failed:", err?.message);
     }
 
@@ -46,7 +43,6 @@ async function loadPdfjs() {
         const mod = require(p);
         if (mod?.getDocument) {
           pdfjsLib = mod;
-          // eslint-disable-next-line no-console
           console.log(`pdfjs-dist loaded successfully (CJS: ${p})`);
           return pdfjsLib;
         }
@@ -55,7 +51,6 @@ async function loadPdfjs() {
       }
     }
 
-    // eslint-disable-next-line no-console
     console.error("pdfjs-dist could not be loaded from any path");
     return null;
   })();
@@ -67,16 +62,19 @@ async function loadPdfjs() {
  * Extract text from a single page, preserving line structure.
  * Groups text items by Y-coordinate to maintain rows.
  */
-function extractPageTextWithLines(content) {
-  if (!content.items || content.items.length === 0) return "";
+function extractPageTextWithLines(content, pageNum) {
+  if (!content.items || content.items.length === 0) {
+    return "";
+  }
 
   // Group items by their Y-coordinate (with tolerance for slight variations)
-  const LINE_TOLERANCE = 3; // pixels
+  const LINE_TOLERANCE = 5; // pixels
   const lines = [];
 
   for (const item of content.items) {
-    if (!item.str || !item.str.trim()) continue;
+    if (!item.str) continue; // Skip items without text
 
+    const text = item.str;
     // Get Y coordinate from transform matrix [a, b, c, d, e, f] where f is Y
     const y = item.transform ? item.transform[5] : 0;
     const x = item.transform ? item.transform[4] : 0;
@@ -91,9 +89,9 @@ function extractPageTextWithLines(content) {
     }
 
     if (foundLine) {
-      foundLine.items.push({ x, text: item.str });
+      foundLine.items.push({ x, text });
     } else {
-      lines.push({ y, items: [{ x, text: item.str }] });
+      lines.push({ y, items: [{ x, text }] });
     }
   }
 
@@ -126,40 +124,64 @@ async function extractPdfText(buffer) {
   }
 
   // Convert Node Buffer to Uint8Array (required by pdfjs)
-  const data = new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+  // Create a new Uint8Array to avoid any issues with Buffer internals
+  const uint8Array = new Uint8Array(buffer.length);
+  for (let i = 0; i < buffer.length; i++) {
+    uint8Array[i] = buffer[i];
+  }
 
   // Load the PDF document
   const loadingTask = pdfjs.getDocument({
-    data,
-    // Disable workers in Node.js environment
+    data: uint8Array,
+    // Disable features that might cause issues in Node.js
     disableFontFace: true,
     isEvalSupported: false,
+    useSystemFonts: false,
   });
 
   const doc = await loadingTask.promise;
   const numPages = doc.numPages;
   const textParts = [];
 
+  logger.info(`Extracting text from ${numPages} page(s)`);
+
   for (let pageNum = 1; pageNum <= numPages; pageNum += 1) {
-    // eslint-disable-next-line no-await-in-loop
-    const page = await doc.getPage(pageNum);
-    // eslint-disable-next-line no-await-in-loop
-    const content = await page.getTextContent();
+    try {
+      // eslint-disable-next-line no-await-in-loop
+      const page = await doc.getPage(pageNum);
+      // eslint-disable-next-line no-await-in-loop
+      const content = await page.getTextContent();
 
-    // Extract text with line preservation
-    const pageText = extractPageTextWithLines(content);
+      // Log item count for debugging
+      const itemCount = content.items?.length || 0;
+      logger.info(`Page ${pageNum}: ${itemCount} text items found`);
 
-    if (pageText) {
-      textParts.push(pageText);
+      if (itemCount === 0) {
+        logger.warn(`Page ${pageNum} has no text items - may be scanned/image-based`);
+        continue;
+      }
+
+      // Extract text with line preservation
+      const pageText = extractPageTextWithLines(content, pageNum);
+
+      if (pageText) {
+        textParts.push(pageText);
+      }
+    } catch (pageErr) {
+      logger.error(`Error extracting text from page ${pageNum}:`, pageErr?.message);
     }
   }
 
+  const fullText = textParts.join("\n\n").trim();
+  logger.info(`Total extracted text length: ${fullText.length} characters`);
+
   return {
-    text: textParts.join("\n\n").trim(),
+    text: fullText,
     pageCount: numPages,
   };
 }
 
 module.exports = {
   extractPdfText,
+  loadPdfjs, // Export for use in PDF-to-image rendering
 };
