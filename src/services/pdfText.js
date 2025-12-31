@@ -1,6 +1,6 @@
 /**
  * PDF text extraction with multiple fallback strategies.
- * Tries unpdf first (modern library), then pdf-parse, then pdfjs-dist.
+ * Tries unpdf first (modern library), then pdfjs-dist.
  */
 
 const logger = require("../config/logger");
@@ -8,11 +8,29 @@ const logger = require("../config/logger");
 let extractorFn = null;
 
 /**
+ * Normalize text result - handle arrays, objects, or strings
+ */
+function normalizeText(text) {
+  if (!text) return "";
+  if (typeof text === "string") return text;
+  if (Array.isArray(text)) return text.join("\n");
+  if (typeof text === "object" && text.text) return normalizeText(text.text);
+  return String(text);
+}
+
+/**
  * Try to set up unpdf extractor (modern, reliable library)
  */
 async function tryUnpdf() {
   try {
-    const { extractText } = await import("unpdf");
+    const unpdf = await import("unpdf");
+    const extractText = unpdf.extractText || unpdf.default?.extractText;
+    
+    if (!extractText) {
+      logger.warn("unpdf loaded but extractText not found:", Object.keys(unpdf));
+      return null;
+    }
+    
     logger.info("Using unpdf for PDF extraction");
     
     return async (buffer) => {
@@ -20,10 +38,20 @@ async function tryUnpdf() {
       const uint8 = new Uint8Array(buffer);
       const result = await extractText(uint8);
       
-      // unpdf returns { text, totalPages }
+      // Log the result structure for debugging
+      logger.info("unpdf result structure:", {
+        hasText: !!result?.text,
+        textType: typeof result?.text,
+        isArray: Array.isArray(result?.text),
+        totalPages: result?.totalPages,
+      });
+      
+      // Normalize the text result
+      const text = normalizeText(result?.text);
+      
       return {
-        text: result?.text || "",
-        pageCount: result?.totalPages || 0,
+        text,
+        pageCount: result?.totalPages || result?.numPages || 0,
       };
     };
   } catch (err) {
@@ -136,8 +164,9 @@ async function extractPdfText(buffer) {
   
   try {
     const result = await extractor(buffer);
-    logger.info(`Extracted ${result.text.length} chars from ${result.pageCount} pages`);
-    return result;
+    const text = normalizeText(result.text);
+    logger.info(`Extracted ${text.length} chars from ${result.pageCount} pages`);
+    return { text, pageCount: result.pageCount };
   } catch (err) {
     logger.error("PDF extraction failed:", err?.message);
     return { text: "", pageCount: 0 };

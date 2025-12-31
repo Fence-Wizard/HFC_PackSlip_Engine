@@ -1281,6 +1281,29 @@
         "method": "none",
         "pages": 0
       }
+    },
+    {
+      "id": "9fdb7bd0-81eb-4134-a19b-53e1a3bc17c0",
+      "status": "review",
+      "file": {
+        "originalName": "2710_001.pdf",
+        "mimeType": "application/pdf",
+        "size": 272573,
+        "storedPath": "data\\uploads\\1767190109896-c7a8d876-8c80-4dfd-8606-7aefc723d70b.pdf",
+        "fileName": "1767190109896-c7a8d876-8c80-4dfd-8606-7aefc723d70b.pdf",
+        "publicUrl": "http://localhost:3030/files/1767190109896-c7a8d876-8c80-4dfd-8606-7aefc723d70b.pdf"
+      },
+      "extractedText": "(extraction failed)",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [],
+      "createdAt": "2025-12-31T14:08:29.898Z",
+      "updatedAt": "2025-12-31T14:08:29.970Z",
+      "submittedAt": null,
+      "extractMeta": {
+        "method": "failed",
+        "pages": 0
+      }
     }
   ]
 }
