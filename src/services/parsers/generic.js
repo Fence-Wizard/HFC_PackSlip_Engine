@@ -63,8 +63,8 @@ function cleanLine(line) {
 function parse(lines, profile = null) {
   const items = [];
   
-  // Stop markers - common footer text
-  const stopRe = /(signature|received by|total order|terms|conditions|materials received|print name|thank you)/i;
+  // Stop markers - only stop at actual footer/signature sections
+  const stopRe = /(signature acknowledges|received by:|convenience fee|restock fee|lbs:\s*\d+\s*p\/d)/i;
   
   // Skip markers - headers, metadata, and addresses
   const skipRe = new RegExp([

@@ -50,6 +50,8 @@ function cleanOcrLine(line) {
   if (!line) return "";
   
   return line
+    // Remove brackets that OCR adds after numbers: "200]" -> "200"
+    .replace(/(\d+)\]/g, "$1")
     .replace(/\|/g, " ")
     .replace(/\[/g, " ")
     .replace(/\]/g, " ")
@@ -57,14 +59,15 @@ function cleanOcrLine(line) {
     .replace(/~/g, " ")
     .replace(/\{/g, " ")
     .replace(/\}/g, " ")
-    // Fix OCR unit errors
-    .replace(/\bolpc\b/gi, "0 pc")
-    .replace(/\bOlpc\b/g, "0 pc")
-    .replace(/\bo\s*ft\b/gi, "0 ft")
-    .replace(/\bo\s*pc\b/gi, "0 pc")
-    .replace(/\bo\s*ea\b/gi, "0 ea")
-    .replace(/\bope\b/gi, "0 pc")
-    .replace(/\bO\s*lpc\b/g, "0 pc")
+    // Fix OCR unit errors - "0Olpc", "00lpc", "Olpc" etc -> " pc "
+    .replace(/\b[oO0]+l?(pc|ft|ea|rl)\b/gi, " $1 ")
+    // "Ofea", "0fea" -> " ea "
+    .replace(/\b[oO0]f?(ea|pc|ft)\b/gi, " $1 ")
+    .replace(/\bo\s*ft\b/gi, " ft ")
+    .replace(/\bo\s*pc\b/gi, " pc ")
+    .replace(/\bo\s*ea\b/gi, " ea ")
+    // "IE", "IEE", "BE", "BEE" are OCR errors - remove them
+    .replace(/\b[IB]E{1,2}\b/gi, " ")
     // Normalize whitespace
     .replace(/\s+/g, " ")
     .trim();
@@ -75,13 +78,19 @@ function cleanOcrLine(line) {
  */
 function normalizeUnit(unit) {
   if (!unit) return "ea";
-  const u = unit.toLowerCase().trim();
+  let u = unit.toLowerCase().trim();
+  
+  // Remove leading zeros/O's that OCR adds: "001pc" -> "pc", "olpc" -> "pc"
+  u = u.replace(/^[0oO]+/, "");
   
   // Common OCR errors and variations
-  if (/^(pc|pcs|piece|pieces)$/i.test(u)) return "pc";
-  if (/^(ft|feet|foot|lf)$/i.test(u)) return "ft";
-  if (/^(ea|each)$/i.test(u)) return "ea";
-  if (/^(o|0)$/i.test(u)) return "ea"; // OCR often reads unit as '0' or 'o'
+  if (/^(pc|pcs|piece|pieces|lpc)$/i.test(u)) return "pc";
+  if (/^(ft|feet|foot|lf|lft)$/i.test(u)) return "ft";
+  if (/^(ea|each|iee|bee)$/i.test(u)) return "ea";  // IEE/BEE are OCR errors
+  if (/^(rl|rll|roll|r11)$/i.test(u)) return "rl";  // r11 is OCR for rll
+  if (/^(bag|bags)$/i.test(u)) return "bag";
+  if (/^(set|sets)$/i.test(u)) return "set";
+  if (/^(o|0)$/i.test(u)) return "ea";
   
   return u.substring(0, 4); // Max 4 chars
 }
@@ -120,9 +129,48 @@ function parseSpsOcr(lines) {
     (l) => /ordered/i.test(l) && /shipped/i.test(l),
   );
   
-  // Stop markers
-  const stopRe = /(materials received|signature acknowledges|review all items|print name|date:|received by)/i;
-  const skipRe = /^\*+|your signature|items accurately|at the time|verify selvage/i;
+  // Stop markers - ONLY stop at signature/received sections
+  const stopRe = /(signature acknowledges|review all items|print name.*date|received by:|convenience fee|restock fee)/i;
+  
+  // Skip patterns - addresses, metadata, headers (more comprehensive)
+  const skipRe = new RegExp([
+    /^\*+/.source,
+    /your signature/i.source,
+    /items accurately/i.source,
+    /at the time/i.source,
+    /verify selvage/i.source,
+    /customer acct/i.source,
+    /payment terms/i.source,
+    /customer po/i.source,
+    /visit our website/i.source,
+    /sales person/i.source,
+    /sales fax/i.source,
+    /sales phone/i.source,
+    /contact name/i.source,
+    /fax number/i.source,
+    /shipped via/i.source,
+    /quote valid/i.source,
+    /sold to:/i.source,
+    /ship to:/i.source,
+    /^po box/i.source,
+    /\d+(st|nd|rd|th)\s+street/i.source,  // "46th Street" - no space before suffix
+    /russell springs/i.source,
+    /bladensburg/i.source,
+    /richmond/i.source,
+    /email only/i.source,
+    /not responsible/i.source,
+    /verify all materials/i.source,
+    /remit payment/i.source,
+    /billing date/i.source,
+    /stephens pipe/i.source,
+    /pipessteel/i.source,
+    /spsfence/i.source,
+    /hurricane fence/i.source,
+    /pack slip/i.source,
+  ].join('|'), 'i');
+  
+  // Only match lines with fence-related keywords (no word boundaries for embedded keywords like "BLKVNL")
+  const fenceKeywords = /(blk|vnl|galv|vinyl|black|green|white|grn|wht|chain|mesh|fabric|tension|brace|post|rail|cap|gate|slat|tie|wire|ext|sp\d|core|ft\/|rl|roll|hot\s*dip|clamp|barb|fitting|bracket|hinge|latch|bolt|nut|washer)/i;
 
   const startIdx = headerIdx >= 0 ? headerIdx + 1 : 0;
   
@@ -130,6 +178,9 @@ function parseSpsOcr(lines) {
     let line = cleanOcrLine(lines[i]);
     if (stopRe.test(line)) break;
     if (skipRe.test(line) || line.length < 10) continue;
+    
+    // Must contain fence product keywords to be considered
+    if (!fenceKeywords.test(line)) continue;
     
     // OCR Pattern 1: qty qty qty unit description
     // Example: "144 144 0 ft BLKVNL 4 x18 x SP40x8pc"
@@ -201,8 +252,32 @@ function parseGenericOcr(lines) {
   const items = [];
   
   // Stop markers
-  const stopRe = /(signature|received by|total order|terms|conditions|materials received|print name)/i;
-  const skipRe = /^(ordered|shipped|description|item|product|qty|quantity|unit|price|amount|total|page|date|order|customer|ship|sold|bill|invoice|pack|delivery|your signature|verify)/i;
+  const stopRe = /(signature acknowledges|received by:|convenience fee|restock fee)/i;
+  
+  // Skip patterns - headers, metadata, AND addresses
+  const skipRe = new RegExp([
+    /^(ordered|shipped|description|item|product|qty|quantity|unit|price|amount|total|page|date|order|customer|ship|sold|bill|invoice|pack|delivery|your signature|verify)/i.source,
+    /customer acct/i.source,
+    /payment terms/i.source,
+    /customer po/i.source,
+    /sales person/i.source,
+    /sold to:/i.source,
+    /ship to:/i.source,
+    /^po box/i.source,
+    /\d+(st|nd|rd|th)\s+street/i.source,  // "46th Street"
+    /russell springs/i.source,
+    /bladensburg/i.source,
+    /richmond/i.source,
+    /email only/i.source,
+    /not responsible/i.source,
+    /remit payment/i.source,
+    /billing date/i.source,
+    /pack slip/i.source,
+    /hurricane fence/i.source,
+  ].join('|'), 'i');
+  
+  // Only match lines with product-related keywords (no word boundaries for embedded keywords)
+  const productKeywords = /(blk|vnl|galv|vinyl|black|green|white|chain|mesh|fabric|tension|brace|post|rail|cap|gate|slat|tie|wire|sp\d|core|hot\s*dip|clamp|barb|bolt|nut|bracket|hinge|latch)/i;
 
   for (let i = 0; i < lines.length; i++) {
     const rawLine = lines[i];
@@ -211,6 +286,9 @@ function parseGenericOcr(lines) {
     if (stopRe.test(line)) break;
     if (skipRe.test(line.trim())) continue;
     if (line.length < 8) continue;
+    
+    // Must contain product keywords
+    if (!productKeywords.test(line)) continue;
     
     // Pattern: number(s) at start, unit, then description
     let m = line.match(/^\s*(\d+)\s+(?:\d+\s+)*(\d+)?\s*([a-zA-Z]{1,4})\s+([A-Za-z].{4,})$/);

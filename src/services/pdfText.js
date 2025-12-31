@@ -66,8 +66,8 @@ async function extractPdfText(buffer) {
     logger.info("PDF appears to be scanned, falling back to OCR...");
     
     // Render pages as images at higher resolution for better OCR
-    // Scale 3 = 216 DPI equivalent (better for table text)
-    const screenshotResult = await parser.getScreenshot({ scale: 3, format: "png" });
+    // Scale 4 = 288 DPI equivalent (better for table columns)
+    const screenshotResult = await parser.getScreenshot({ scale: 4, format: "png" });
     await parser.destroy();
     parser = null;
     
