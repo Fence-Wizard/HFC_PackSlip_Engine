@@ -1,115 +1,166 @@
 /**
- * PDF text extraction using pdfjs-dist directly.
- * Preserves line breaks based on Y-coordinates for table extraction.
+ * PDF text extraction with multiple fallback strategies.
+ * Tries pdf-parse v2.x first, then falls back to pdfjs-dist.
  */
 
 const logger = require("../config/logger");
 
-let pdfjsLib = null;
-let loadPromise = null;
-
-async function loadPdfjs() {
-  if (pdfjsLib) return pdfjsLib;
-  if (loadPromise) return loadPromise;
-
-  loadPromise = (async () => {
-    // Try ESM import of pdfjs-dist (works in Node 22)
-    try {
-      const mod = await import("pdfjs-dist");
-      if (mod?.getDocument) {
-        pdfjsLib = mod;
-        console.log("pdfjs-dist loaded successfully (ESM)");
-        return pdfjsLib;
-      }
-      if (mod?.default?.getDocument) {
-        pdfjsLib = mod.default;
-        console.log("pdfjs-dist loaded successfully (ESM default)");
-        return pdfjsLib;
-      }
-      console.error("pdfjs-dist loaded but getDocument not found:", Object.keys(mod || {}));
-    } catch (err) {
-      console.error("pdfjs-dist ESM import failed:", err?.message);
-    }
-
-    // Try legacy CJS paths as fallback
-    const legacyPaths = [
-      "pdfjs-dist/legacy/build/pdf.js",
-      "pdfjs-dist/legacy/build/pdf",
-      "pdfjs-dist/build/pdf",
-    ];
-    for (const p of legacyPaths) {
-      try {
-        // eslint-disable-next-line import/no-dynamic-require, global-require
-        const mod = require(p);
-        if (mod?.getDocument) {
-          pdfjsLib = mod;
-          console.log(`pdfjs-dist loaded successfully (CJS: ${p})`);
-          return pdfjsLib;
-        }
-      } catch {
-        // try next
-      }
-    }
-
-    console.error("pdfjs-dist could not be loaded from any path");
-    return null;
-  })();
-
-  return loadPromise;
-}
+let extractorFn = null;
 
 /**
- * Extract text from a single page, preserving line structure.
- * Groups text items by Y-coordinate to maintain rows.
+ * Try to set up pdf-parse v2.x extractor
  */
-function extractPageTextWithLines(content, pageNum) {
-  if (!content.items || content.items.length === 0) {
-    return "";
-  }
-
-  // Group items by their Y-coordinate (with tolerance for slight variations)
-  const LINE_TOLERANCE = 5; // pixels
-  const lines = [];
-
-  for (const item of content.items) {
-    if (!item.str) continue; // Skip items without text
-
-    const text = item.str;
-    // Get Y coordinate from transform matrix [a, b, c, d, e, f] where f is Y
-    const y = item.transform ? item.transform[5] : 0;
-    const x = item.transform ? item.transform[4] : 0;
-
-    // Find existing line with similar Y
-    let foundLine = null;
-    for (const line of lines) {
-      if (Math.abs(line.y - y) <= LINE_TOLERANCE) {
-        foundLine = line;
-        break;
-      }
+function tryPdfParseV2() {
+  try {
+    const pdfParse = require("pdf-parse");
+    
+    // Check if it's v2.x with PDFParse class
+    if (pdfParse.PDFParse) {
+      const PDFParse = pdfParse.PDFParse;
+      logger.info("Using pdf-parse v2.x with PDFParse class");
+      
+      return async (buffer) => {
+        // PDFParse v2.x requires options with verbosity
+        const parser = new PDFParse({
+          verbosity: 0, // Suppress warnings
+          max: 0, // No page limit
+        });
+        
+        const result = await parser.parse(buffer);
+        return {
+          text: result?.text || "",
+          pageCount: result?.numPages || result?.numpages || 0,
+        };
+      };
     }
-
-    if (foundLine) {
-      foundLine.items.push({ x, text });
-    } else {
-      lines.push({ y, items: [{ x, text }] });
+    
+    // Check if it's v1.x style (function directly)
+    if (typeof pdfParse === "function") {
+      logger.info("Using pdf-parse v1.x style");
+      return async (buffer) => {
+        const result = await pdfParse(buffer);
+        return {
+          text: result?.text || "",
+          pageCount: result?.numpages || 0,
+        };
+      };
     }
+    
+    // Check for default export
+    if (typeof pdfParse.default === "function") {
+      logger.info("Using pdf-parse default export");
+      return async (buffer) => {
+        const result = await pdfParse.default(buffer);
+        return {
+          text: result?.text || "",
+          pageCount: result?.numpages || 0,
+        };
+      };
+    }
+    
+    logger.warn("pdf-parse found but no usable export:", Object.keys(pdfParse));
+  } catch (err) {
+    logger.warn("pdf-parse not available:", err?.message);
   }
-
-  // Sort lines by Y (descending - PDF coordinates have origin at bottom)
-  lines.sort((a, b) => b.y - a.y);
-
-  // For each line, sort items by X (left to right) and join
-  const textLines = lines.map((line) => {
-    line.items.sort((a, b) => a.x - b.x);
-    return line.items.map((i) => i.text).join(" ").trim();
-  });
-
-  return textLines.filter(Boolean).join("\n");
+  
+  return null;
 }
 
 /**
- * Extract text from a PDF buffer using pdfjs-dist directly.
- * Preserves line breaks based on Y-coordinates for better table extraction.
+ * Set up pdfjs-dist extractor as fallback
+ */
+async function tryPdfjsDist() {
+  try {
+    // Try ESM import
+    const pdfjs = await import("pdfjs-dist");
+    const getDocument = pdfjs.getDocument || pdfjs.default?.getDocument;
+    
+    if (!getDocument) {
+      logger.warn("pdfjs-dist loaded but getDocument not found");
+      return null;
+    }
+    
+    logger.info("Using pdfjs-dist for PDF extraction");
+    
+    return async (buffer) => {
+      // Convert Buffer to Uint8Array
+      const uint8Array = new Uint8Array(buffer.length);
+      for (let i = 0; i < buffer.length; i++) {
+        uint8Array[i] = buffer[i];
+      }
+      
+      const loadingTask = getDocument({
+        data: uint8Array,
+        disableFontFace: true,
+        isEvalSupported: false,
+      });
+      
+      const doc = await loadingTask.promise;
+      const numPages = doc.numPages;
+      const textParts = [];
+      
+      for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+        try {
+          const page = await doc.getPage(pageNum);
+          const content = await page.getTextContent();
+          
+          if (content.items && content.items.length > 0) {
+            // Group by Y coordinate for line preservation
+            const lines = {};
+            for (const item of content.items) {
+              if (!item.str) continue;
+              const y = Math.round(item.transform?.[5] || 0);
+              if (!lines[y]) lines[y] = [];
+              lines[y].push({ x: item.transform?.[4] || 0, text: item.str });
+            }
+            
+            // Sort by Y (descending) and X (ascending)
+            const sortedYs = Object.keys(lines).map(Number).sort((a, b) => b - a);
+            for (const y of sortedYs) {
+              lines[y].sort((a, b) => a.x - b.x);
+              const lineText = lines[y].map(i => i.text).join(" ").trim();
+              if (lineText) textParts.push(lineText);
+            }
+          }
+        } catch (pageErr) {
+          logger.warn(`Error on page ${pageNum}:`, pageErr?.message);
+        }
+      }
+      
+      return {
+        text: textParts.join("\n").trim(),
+        pageCount: numPages,
+      };
+    };
+  } catch (err) {
+    logger.warn("pdfjs-dist not available:", err?.message);
+  }
+  
+  return null;
+}
+
+/**
+ * Initialize the PDF extractor (tries multiple strategies)
+ */
+async function initExtractor() {
+  if (extractorFn) return extractorFn;
+  
+  // Try pdf-parse v2.x first (it uses a newer pdfjs-dist internally)
+  extractorFn = tryPdfParseV2();
+  if (extractorFn) return extractorFn;
+  
+  // Fall back to direct pdfjs-dist
+  extractorFn = await tryPdfjsDist();
+  if (extractorFn) return extractorFn;
+  
+  // Last resort: return empty text
+  logger.error("No PDF extraction method available!");
+  extractorFn = async () => ({ text: "", pageCount: 0 });
+  return extractorFn;
+}
+
+/**
+ * Extract text from a PDF buffer.
  * @param {Buffer} buffer - Node.js Buffer containing PDF data
  * @returns {Promise<{text: string, pageCount: number}>}
  */
@@ -117,71 +168,20 @@ async function extractPdfText(buffer) {
   if (!buffer || !Buffer.isBuffer(buffer)) {
     throw new Error("extractPdfText expected a Node Buffer");
   }
-
-  const pdfjs = await loadPdfjs();
-  if (!pdfjs || typeof pdfjs.getDocument !== "function") {
-    throw new Error("pdfjs-dist unavailable - cannot extract PDF text");
+  
+  const extractor = await initExtractor();
+  
+  try {
+    const result = await extractor(buffer);
+    logger.info(`Extracted ${result.text.length} chars from ${result.pageCount} pages`);
+    return result;
+  } catch (err) {
+    logger.error("PDF extraction failed:", err?.message);
+    // Return empty result instead of throwing
+    return { text: "", pageCount: 0 };
   }
-
-  // Convert Node Buffer to Uint8Array (required by pdfjs)
-  // Create a new Uint8Array to avoid any issues with Buffer internals
-  const uint8Array = new Uint8Array(buffer.length);
-  for (let i = 0; i < buffer.length; i++) {
-    uint8Array[i] = buffer[i];
-  }
-
-  // Load the PDF document
-  const loadingTask = pdfjs.getDocument({
-    data: uint8Array,
-    // Disable features that might cause issues in Node.js
-    disableFontFace: true,
-    isEvalSupported: false,
-    useSystemFonts: false,
-  });
-
-  const doc = await loadingTask.promise;
-  const numPages = doc.numPages;
-  const textParts = [];
-
-  logger.info(`Extracting text from ${numPages} page(s)`);
-
-  for (let pageNum = 1; pageNum <= numPages; pageNum += 1) {
-    try {
-      // eslint-disable-next-line no-await-in-loop
-      const page = await doc.getPage(pageNum);
-      // eslint-disable-next-line no-await-in-loop
-      const content = await page.getTextContent();
-
-      // Log item count for debugging
-      const itemCount = content.items?.length || 0;
-      logger.info(`Page ${pageNum}: ${itemCount} text items found`);
-
-      if (itemCount === 0) {
-        logger.warn(`Page ${pageNum} has no text items - may be scanned/image-based`);
-        continue;
-      }
-
-      // Extract text with line preservation
-      const pageText = extractPageTextWithLines(content, pageNum);
-
-      if (pageText) {
-        textParts.push(pageText);
-      }
-    } catch (pageErr) {
-      logger.error(`Error extracting text from page ${pageNum}:`, pageErr?.message);
-    }
-  }
-
-  const fullText = textParts.join("\n\n").trim();
-  logger.info(`Total extracted text length: ${fullText.length} characters`);
-
-  return {
-    text: fullText,
-    pageCount: numPages,
-  };
 }
 
 module.exports = {
   extractPdfText,
-  loadPdfjs, // Export for use in PDF-to-image rendering
 };

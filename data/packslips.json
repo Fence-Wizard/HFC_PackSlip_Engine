@@ -1235,6 +1235,29 @@
         "method": "failed",
         "pages": 0
       }
+    },
+    {
+      "id": "9dec958b-d8eb-441b-b605-168dfb02fc1d",
+      "status": "review",
+      "file": {
+        "originalName": "2710_001.pdf",
+        "mimeType": "application/pdf",
+        "size": 272573,
+        "storedPath": "data\\uploads\\1767189151747-676a548b-8e11-4d37-aa43-07fa7eb34179.pdf",
+        "fileName": "1767189151747-676a548b-8e11-4d37-aa43-07fa7eb34179.pdf",
+        "publicUrl": "http://localhost:3030/files/1767189151747-676a548b-8e11-4d37-aa43-07fa7eb34179.pdf"
+      },
+      "extractedText": "(No text could be extracted. This PDF may be scanned/image-based. Install GraphicsMagick for OCR support.)",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [],
+      "createdAt": "2025-12-31T13:52:31.749Z",
+      "updatedAt": "2025-12-31T13:52:37.113Z",
+      "submittedAt": null,
+      "extractMeta": {
+        "method": "none",
+        "pages": 2
+      }
     }
   ]
 }
