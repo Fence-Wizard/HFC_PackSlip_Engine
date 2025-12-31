@@ -1,7 +1,9 @@
 /**
- * Multi-format pack slip parser.
+ * Multi-format pack slip parser with OCR text support.
  * Supports multiple supplier formats and auto-detects based on document content.
  */
+
+const logger = require("../config/logger");
 
 function toNum(val) {
   if (val == null) return null;
@@ -13,217 +15,237 @@ function toNum(val) {
 }
 
 /**
- * Extract quantity and unit from strings like "32 Each", "784.00 EA", "6 rll", "14PAL"
+ * Clean OCR artifacts from text.
+ * OCR often produces | ] [ characters in table-like documents.
  */
-function parseQtyUnit(str) {
-  if (!str) return { qty: 0, unit: "" };
-  const cleaned = String(str).trim();
+function cleanOcrText(text) {
+  if (!text) return "";
+  
+  return text
+    // Replace common OCR table artifacts
+    .replace(/\|/g, " ")
+    .replace(/\[/g, " ")
+    .replace(/\]/g, " ")
+    .replace(/\{/g, " ")
+    .replace(/\}/g, " ")
+    // Fix common OCR errors
+    .replace(/\bolpc\b/gi, "0 pc")
+    .replace(/\bO\|/g, "0 ")
+    .replace(/\bole\b/gi, "0 ea")
+    .replace(/\boft\b/gi, "0 ft")
+    .replace(/\bOft\b/g, "0 ft")
+    .replace(/\bl\b/g, "1") // lone 'l' often is '1'
+    // Normalize whitespace
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
-  // Pattern: number followed by unit (e.g., "32 Each", "784.00 EA", "6 rll")
-  const match = cleaned.match(/^([\d,.]+)\s*([a-zA-Z]+)?/);
-  if (match) {
-    return {
-      qty: toNum(match[1]) || 0,
-      unit: (match[2] || "").toLowerCase().replace(/each/i, "ea"),
-    };
+/**
+ * Clean a single line from OCR artifacts
+ */
+function cleanOcrLine(line) {
+  if (!line) return "";
+  
+  return line
+    .replace(/\|/g, " ")
+    .replace(/\[/g, " ")
+    .replace(/\]/g, " ")
+    .replace(/—/g, " ")
+    .replace(/~/g, " ")
+    .replace(/\{/g, " ")
+    .replace(/\}/g, " ")
+    // Fix OCR unit errors
+    .replace(/\bolpc\b/gi, "0 pc")
+    .replace(/\bOlpc\b/g, "0 pc")
+    .replace(/\bo\s*ft\b/gi, "0 ft")
+    .replace(/\bo\s*pc\b/gi, "0 pc")
+    .replace(/\bo\s*ea\b/gi, "0 ea")
+    .replace(/\bope\b/gi, "0 pc")
+    .replace(/\bO\s*lpc\b/g, "0 pc")
+    // Normalize whitespace
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Normalize unit string
+ */
+function normalizeUnit(unit) {
+  if (!unit) return "ea";
+  const u = unit.toLowerCase().trim();
+  
+  // Common OCR errors and variations
+  if (/^(pc|pcs|piece|pieces)$/i.test(u)) return "pc";
+  if (/^(ft|feet|foot|lf)$/i.test(u)) return "ft";
+  if (/^(ea|each)$/i.test(u)) return "ea";
+  if (/^(o|0)$/i.test(u)) return "ea"; // OCR often reads unit as '0' or 'o'
+  
+  return u.substring(0, 4); // Max 4 chars
+}
+
+/**
+ * Clean description of trailing OCR artifacts
+ */
+function cleanDescription(desc) {
+  if (!desc) return "";
+  let cleaned = desc.trim();
+  
+  // Apply multiple times to catch nested artifacts
+  for (let i = 0; i < 3; i++) {
+    // Remove trailing OCR artifacts (single/double letters, punctuation)
+    cleaned = cleaned.replace(/\s+[IiEe]{1,3}\s*$/, "");
+    cleaned = cleaned.replace(/\s+[Ee]s\s*$/i, "");
+    cleaned = cleaned.replace(/\s+EE+\s*$/i, "");
+    cleaned = cleaned.replace(/\s+I\s*$/i, "");
+    cleaned = cleaned.replace(/\s+[—\-~]+\s*$/, "");
+    cleaned = cleaned.replace(/\s+\d{1,2}\s*$/, ""); // trailing 1-2 digit numbers
+    cleaned = cleaned.trim();
   }
-  return { qty: 0, unit: "" };
+  
+  return cleaned;
 }
 
 // ============================================================================
-// FORMAT 1: SPS Stephens Pipe & Steel
-// Columns: Ordered | Shipped | BackOrder | Unit | Description | Packing | Price | Amount
+// FORMAT: SPS Stephens Pipe & Steel (OCR-friendly)
+// Columns: Ordered | Shipped | BackOrder | Unit | Description
 // ============================================================================
-function parseSpsFormat(lines) {
-  const items = [];
-
-  // Find header row
-  const headerIdx = lines.findIndex(
-    (l) => /ordered/i.test(l) && /shipped/i.test(l) && /unit/i.test(l),
-  );
-  if (headerIdx === -1) return items;
-
-  // Stop markers
-  const stopRe = /(materials received by|signature acknowledges|review all items|total order|ask me about)/i;
-  const skipRe = /^\*+\s*(your signature|items accurately|at the time|verify selvage|colannas)/i;
-
-  // SPS row: qty qty backorder unit [price amount] description [packing]
-  // Examples: "300 300 0 ft GRN VNL 2B 2x8..." or "16 16 0 ea 5.35 85.60 TENSION BAR"
-  for (let i = headerIdx + 1; i < lines.length; i++) {
-    const line = lines[i];
-    if (stopRe.test(line)) break;
-    if (skipRe.test(line) || /^\*+$/.test(line)) continue;
-
-    // Try pattern: qty qty backorder unit description [packing]
-    // Where description starts with letters
-    let m = line.match(/^\s*(\d+)\s+(\d+)\s+(\d+)\s+([a-zA-Z]{1,5})\s+([A-Za-z].+)$/);
-    if (m) {
-      const shipped = toNum(m[2]) || toNum(m[1]) || 0;
-      const unit = (m[4] || "").toLowerCase();
-      let desc = (m[5] || "").trim();
-      // Remove trailing packing info like "6 rll", "3 pkg"
-      desc = desc.replace(/\s+\d+\s*(rll|pkg|box|bag|pal)s?\s*$/i, "").trim();
-
-      if (desc && shipped > 0) {
-        items.push({ sku: "", description: desc, quantity: shipped, unit, price: 0, notes: "" });
-      }
-      continue;
-    }
-
-    // Try pattern with price/amount before description
-    m = line.match(/^\s*(\d+)\s+(\d+)\s+(\d+)\s+([a-zA-Z]{1,5})\s+([\d.]+)\s+([\d.]+)\s+(.+)$/);
-    if (m) {
-      const shipped = toNum(m[2]) || toNum(m[1]) || 0;
-      const unit = (m[4] || "").toLowerCase();
-      const price = toNum(m[5]) || 0;
-      let desc = (m[7] || "").trim();
-      desc = desc.replace(/\s+\d+\s*(rll|pkg|box|bag|pal)s?\s*$/i, "").trim();
-
-      if (desc && shipped > 0) {
-        items.push({ sku: "", description: desc, quantity: shipped, unit, price, notes: "" });
-      }
-    }
-
-    if (items.length >= 200) break;
-  }
-
-  return items;
-}
-
-// ============================================================================
-// FORMAT 2: Docks & Docks Lumber / Generic Delivery Ticket
-// Columns: Item | Description | Qty Delivered | BackOrdered | Received
-// ============================================================================
-function parseDocksFormat(lines) {
-  const items = [];
-
-  // Find header row
-  const headerIdx = lines.findIndex(
-    (l) => /description/i.test(l) && /qty\s*delivered/i.test(l),
-  );
-  if (headerIdx === -1) return items;
-
-  const stopRe = /(all items listed|received in good condition|subject to our terms)/i;
-
-  for (let i = headerIdx + 1; i < lines.length; i++) {
-    const line = lines[i];
-    if (stopRe.test(line)) break;
-    if (!line.trim()) continue;
-
-    // Pattern: item# description qty [unit]
-    // Example: "1 24M16P - 2x4x16 #1 Prime MCA - GC 32 Each"
-    const m = line.match(/^\s*(\d+)\s+(.+?)\s+(\d+)\s*(Each|EA|PC|LF|SF|BF|CY|GAL|LB|TON|BAG|BOX|PKG|PCS|FT|IN)?\s*$/i);
-    if (m) {
-      const desc = (m[2] || "").trim();
-      const qty = toNum(m[3]) || 0;
-      const unit = (m[4] || "ea").toLowerCase();
-
-      if (desc && qty > 0) {
-        items.push({ sku: "", description: desc, quantity: qty, unit, price: 0, notes: "" });
-      }
-    }
-
-    if (items.length >= 200) break;
-  }
-
-  return items;
-}
-
-// ============================================================================
-// FORMAT 3: Oldcastle APG / Shipping Ticket
-// Columns: ITEM #/PART # | DESCRIPTION | PKG/PART LOAD | TOTAL ORDER
-// ============================================================================
-function parseOldcastleFormat(lines) {
-  const items = [];
-
-  // Find header row
-  const headerIdx = lines.findIndex(
-    (l) => /item\s*#/i.test(l) && /description/i.test(l) && /total\s*order/i.test(l),
-  );
-  if (headerIdx === -1) return items;
-
-  const stopRe = /(driver'?s signature|received by name|total pkg qty)/i;
-
-  for (let i = headerIdx + 1; i < lines.length; i++) {
-    const line = lines[i];
-    if (stopRe.test(line)) break;
-    if (!line.trim()) continue;
-
-    // Pattern: item#/part# barcode description location qty unit
-    // Example: "65200940 / 293316 764661103608 Sakrete Concrete 60lb Location YARD 14PAL/0.00EA 784.00 EA"
-    // Simpler: look for description followed by quantity
-    const m = line.match(/^[\d\s\/]+\s+\d+\s+(.+?)\s+Location\s+\w+\s+[\d.\/]+\w+\s+([\d.]+)\s*([A-Za-z]+)/i);
-    if (m) {
-      const desc = (m[1] || "").trim();
-      const qty = toNum(m[2]) || 0;
-      const unit = (m[3] || "ea").toLowerCase();
-
-      if (desc && qty > 0) {
-        items.push({ sku: "", description: desc, quantity: qty, unit, price: 0, notes: "" });
-      }
-      continue;
-    }
-
-    // Fallback: look for product name with qty at end
-    const m2 = line.match(/(.+?)\s+([\d.]+)\s*(EA|PC|LB|KG|PAL|BAG|BOX|PKG)\b/i);
-    if (m2) {
-      let desc = (m2[1] || "").trim();
-      // Clean up leading numbers/barcodes
-      desc = desc.replace(/^[\d\s\/]+/, "").trim();
-      const qty = toNum(m2[2]) || 0;
-      const unit = (m2[3] || "ea").toLowerCase();
-
-      if (desc && desc.length > 3 && qty > 0) {
-        items.push({ sku: "", description: desc, quantity: qty, unit, price: 0, notes: "" });
-      }
-    }
-
-    if (items.length >= 200) break;
-  }
-
-  return items;
-}
-
-// ============================================================================
-// FORMAT 4: Generic table parser (fallback)
-// Tries to find any tabular data with quantities
-// ============================================================================
-function parseGenericTable(lines) {
+function parseSpsOcr(lines) {
   const items = [];
   
-  // Skip header-like lines
-  const skipWords = /^(ordered|shipped|description|item|product|qty|quantity|unit|price|amount|total|page|date|order|customer|ship|sold|bill|invoice|pack|delivery)/i;
-  const stopRe = /(signature|received by|total order|terms|conditions|subject to)/i;
+  // Find header row - look for "ordered" and "shipped" 
+  const headerIdx = lines.findIndex(
+    (l) => /ordered/i.test(l) && /shipped/i.test(l),
+  );
+  
+  // Stop markers
+  const stopRe = /(materials received|signature acknowledges|review all items|print name|date:|received by)/i;
+  const skipRe = /^\*+|your signature|items accurately|at the time|verify selvage/i;
 
-  for (const line of lines) {
+  const startIdx = headerIdx >= 0 ? headerIdx + 1 : 0;
+  
+  for (let i = startIdx; i < lines.length; i++) {
+    let line = cleanOcrLine(lines[i]);
     if (stopRe.test(line)) break;
-    if (skipWords.test(line.trim())) continue;
-    if (line.trim().length < 5) continue;
-
-    // Look for lines with: number(s) followed by text
-    // Pattern: qty [qty] [qty] unit description OR description qty unit
+    if (skipRe.test(line) || line.length < 10) continue;
     
-    // Try: numbers at start, unit, then description
-    let m = line.match(/^\s*(\d+)\s+(?:\d+\s+)*([a-zA-Z]{1,5})\s+([A-Za-z].{5,})$/);
+    // OCR Pattern 1: qty qty qty unit description
+    // Example: "144 144 0 ft BLKVNL 4 x18 x SP40x8pc"
+    let m = line.match(/^\s*(\d+)\s+(\d+)\s+(\d+)\s*([a-zA-Z]{1,4})\s+(.+)$/);
+    if (m) {
+      const shipped = toNum(m[2]) || toNum(m[1]) || 0;
+      const unit = normalizeUnit(m[4]);
+      const desc = cleanDescription(m[5]);
+      
+      if (desc && desc.length > 3 && shipped > 0) {
+        items.push({ sku: "", description: desc, quantity: shipped, unit, price: 0, notes: "" });
+        continue;
+      }
+    }
+    
+    // OCR Pattern 2: qty qty unit description (missing backorder)
+    m = line.match(/^\s*(\d+)\s+(\d+)\s*([a-zA-Z]{1,4})\s+(.+)$/);
+    if (m) {
+      const shipped = toNum(m[2]) || toNum(m[1]) || 0;
+      const unit = normalizeUnit(m[3]);
+      const desc = cleanDescription(m[4]);
+      
+      if (desc && desc.length > 3 && shipped > 0) {
+        items.push({ sku: "", description: desc, quantity: shipped, unit, price: 0, notes: "" });
+        continue;
+      }
+    }
+    
+    // OCR Pattern 3: qty unit description (simplified)
+    m = line.match(/^\s*(\d+)\s*([a-zA-Z]{1,4})\s+([A-Z].+)$/);
     if (m) {
       const qty = toNum(m[1]) || 0;
-      const unit = (m[2] || "").toLowerCase();
-      const desc = (m[3] || "").trim();
+      const unit = normalizeUnit(m[2]);
+      const desc = cleanDescription(m[3]);
       
-      if (desc && qty > 0 && !skipWords.test(desc)) {
+      if (desc && desc.length > 3 && qty > 0) {
+        items.push({ sku: "", description: desc, quantity: qty, unit, price: 0, notes: "" });
+        continue;
+      }
+    }
+    
+    // OCR Pattern 4: Look for VNL/GALV products specifically
+    // "BLKVNL 4 x18 x SP40" with qty somewhere nearby
+    m = line.match(/(\d+)\s*(?:pc|ft|ea)?\s*((?:BLK|GRN|WHT|GALV|VNL|BLACK|GREEN|WHITE).+)/i);
+    if (m) {
+      const qty = toNum(m[1]) || 0;
+      const desc = cleanDescription(m[2]);
+      
+      // Try to extract unit from description
+      const unitMatch = desc.match(/\b(pc|ft|ea|lf|each)\b/i);
+      const unit = normalizeUnit(unitMatch ? unitMatch[1] : "pc");
+      
+      if (desc && desc.length > 5 && qty > 0) {
         items.push({ sku: "", description: desc, quantity: qty, unit, price: 0, notes: "" });
         continue;
       }
     }
 
-    // Try: description followed by qty and unit
-    m = line.match(/^([A-Za-z].{5,}?)\s+(\d+)\s*(EA|PC|FT|LF|LB|KG|GAL|BOX|BAG|PKG|RLL|EACH|PCS)?\s*$/i);
+    if (items.length >= 200) break;
+  }
+
+  return items;
+}
+
+// ============================================================================
+// FORMAT: Generic OCR parser for any pack slip
+// ============================================================================
+function parseGenericOcr(lines) {
+  const items = [];
+  
+  // Stop markers
+  const stopRe = /(signature|received by|total order|terms|conditions|materials received|print name)/i;
+  const skipRe = /^(ordered|shipped|description|item|product|qty|quantity|unit|price|amount|total|page|date|order|customer|ship|sold|bill|invoice|pack|delivery|your signature|verify)/i;
+
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i];
+    const line = cleanOcrLine(rawLine);
+    
+    if (stopRe.test(line)) break;
+    if (skipRe.test(line.trim())) continue;
+    if (line.length < 8) continue;
+    
+    // Pattern: number(s) at start, unit, then description
+    let m = line.match(/^\s*(\d+)\s+(?:\d+\s+)*(\d+)?\s*([a-zA-Z]{1,4})\s+([A-Za-z].{4,})$/);
     if (m) {
-      const desc = (m[1] || "").trim();
-      const qty = toNum(m[2]) || 0;
-      const unit = (m[3] || "ea").toLowerCase().replace(/each/i, "ea");
+      const qty = toNum(m[2]) || toNum(m[1]) || 0;
+      const unit = normalizeUnit(m[3]);
+      let desc = (m[4] || "").trim();
+      desc = desc.replace(/\s+[IiEe\-]+\s*$/, "").trim();
       
-      if (desc && qty > 0 && !skipWords.test(desc)) {
+      if (desc && qty > 0 && !skipRe.test(desc)) {
+        items.push({ sku: "", description: desc, quantity: qty, unit, price: 0, notes: "" });
+        continue;
+      }
+    }
+
+    // Pattern: description followed by qty
+    m = line.match(/^([A-Za-z].{4,}?)\s+(\d+)\s*(EA|PC|FT|LF|LB|KG|GAL|BOX|BAG|PKG|RLL|EACH|PCS)?\s*$/i);
+    if (m) {
+      let desc = (m[1] || "").trim();
+      const qty = toNum(m[2]) || 0;
+      const unit = normalizeUnit(m[3] || "ea");
+      
+      if (desc && qty > 0 && !skipRe.test(desc)) {
+        items.push({ sku: "", description: desc, quantity: qty, unit, price: 0, notes: "" });
+        continue;
+      }
+    }
+    
+    // Pattern: Look for product keywords with quantities
+    m = line.match(/(\d+)\s*(?:pc|ft|ea)?\s*((?:GALV|VNL|VINYL|BLACK|TENSION|BRACE|POST|RAIL|CAP|TOP|BOTTOM|GATE|HINGE|LATCH|TIE|WIRE|FABRIC|MESH|SLAT).+)/i);
+    if (m) {
+      const qty = toNum(m[1]) || 0;
+      let desc = (m[2] || "").trim();
+      desc = desc.replace(/\s+[IiEe\-]+\s*$/, "").trim();
+      
+      if (desc && desc.length > 5 && qty > 0) {
+        const unitMatch = desc.match(/\b(pc|ft|ea|lf)\b/i);
+        const unit = normalizeUnit(unitMatch ? unitMatch[1] : "pc");
         items.push({ sku: "", description: desc, quantity: qty, unit, price: 0, notes: "" });
       }
     }
@@ -241,31 +263,23 @@ function detectFormat(text) {
   const lowerText = text.toLowerCase();
   
   // SPS Stephens Pipe & Steel
-  if (/stephens pipe|sps\s*fence|spsfence\.com/i.test(text)) {
+  if (/stephens pipe|sps\s*fence|spsfence\.com|pipe.?steel/i.test(text)) {
     return "sps";
   }
   
-  // Docks & Docks Lumber
-  if (/docks.*lumber|delivery ticket/i.test(text) && /qty\s*delivered/i.test(text)) {
-    return "docks";
+  // Master Halco
+  if (/master\s*halco/i.test(text)) {
+    return "masterhalco";
   }
   
   // Oldcastle APG
-  if (/oldcastle|apg.*company|shipping ticket/i.test(text)) {
+  if (/oldcastle|apg.*company/i.test(text)) {
     return "oldcastle";
   }
   
-  // Try to detect by column headers
-  if (/ordered.*shipped.*backorder.*unit/i.test(text)) {
+  // Detect by column headers
+  if (/ordered.*shipped/i.test(text)) {
     return "sps";
-  }
-  
-  if (/item.*description.*qty\s*delivered/i.test(text)) {
-    return "docks";
-  }
-  
-  if (/item\s*#.*description.*total\s*order/i.test(text)) {
-    return "oldcastle";
   }
   
   return "generic";
@@ -273,51 +287,49 @@ function detectFormat(text) {
 
 /**
  * Main entry point: parse extracted text into line items.
- * Auto-detects supplier format and applies appropriate parser.
+ * Handles OCR text with cleanup and flexible parsing.
  */
 function parsePackSlip(text) {
-  if (!text || !text.trim()) return [];
-
+  if (!text || !text.trim()) {
+    logger.warn("parsePackSlip: empty text provided");
+    return [];
+  }
+  
+  // Split into lines first, then clean each line individually
   const lines = text
     .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter(Boolean);
+    .map((l) => cleanOcrLine(l))
+    .filter((l) => l.length > 0);
 
   const format = detectFormat(text);
-  // eslint-disable-next-line no-console
-  console.log(`Pack slip format detected: ${format}`);
+  logger.info(`Pack slip format detected: ${format}, ${lines.length} lines`);
 
   let items = [];
 
+  // Try format-specific parser first
   switch (format) {
     case "sps":
-      items = parseSpsFormat(lines);
-      break;
-    case "docks":
-      items = parseDocksFormat(lines);
-      break;
-    case "oldcastle":
-      items = parseOldcastleFormat(lines);
+    case "masterhalco":
+      items = parseSpsOcr(lines);
       break;
     default:
-      items = parseGenericTable(lines);
+      items = parseGenericOcr(lines);
   }
 
-  // If primary parser found nothing, try others as fallback
+  // If primary parser found nothing, try generic
   if (items.length === 0) {
-    items = parseSpsFormat(lines);
+    logger.info("Primary parser found no items, trying generic OCR parser");
+    items = parseGenericOcr(lines);
   }
+  
+  // Still nothing? Try SPS parser as last resort
   if (items.length === 0) {
-    items = parseDocksFormat(lines);
-  }
-  if (items.length === 0) {
-    items = parseOldcastleFormat(lines);
-  }
-  if (items.length === 0) {
-    items = parseGenericTable(lines);
+    logger.info("Generic parser found no items, trying SPS OCR parser");
+    items = parseSpsOcr(lines);
   }
 
+  logger.info(`parsePackSlip: found ${items.length} line items`);
   return items;
 }
 
-module.exports = { parsePackSlip, detectFormat };
+module.exports = { parsePackSlip, detectFormat, cleanOcrText };
