@@ -1304,6 +1304,75 @@
         "method": "failed",
         "pages": 0
       }
+    },
+    {
+      "id": "36826404-a04e-4fb5-9086-ed48f955ee4c",
+      "status": "review",
+      "file": {
+        "originalName": "2710_001.pdf",
+        "mimeType": "application/pdf",
+        "size": 272573,
+        "storedPath": "data\\uploads\\1767190562094-8f5e0567-2939-43ef-b482-a633a55f500b.pdf",
+        "fileName": "1767190562094-8f5e0567-2939-43ef-b482-a633a55f500b.pdf",
+        "publicUrl": "http://localhost:3030/files/1767190562094-8f5e0567-2939-43ef-b482-a633a55f500b.pdf"
+      },
+      "extractedText": "(No text could be extracted. This PDF may be scanned/image-based. Install GraphicsMagick for OCR support.)",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [],
+      "createdAt": "2025-12-31T14:16:02.099Z",
+      "updatedAt": "2025-12-31T14:16:04.747Z",
+      "submittedAt": null,
+      "extractMeta": {
+        "method": "none",
+        "pages": 2
+      }
+    },
+    {
+      "id": "122d5512-e3d6-487f-b58b-af8ae4b2ce44",
+      "status": "review",
+      "file": {
+        "originalName": "2522406 - Pack Slip.pdf",
+        "mimeType": "application/pdf",
+        "size": 88795,
+        "storedPath": "data\\uploads\\1767191013730-8d12c526-dbf1-4157-9e7e-50f6d5856466.pdf",
+        "fileName": "1767191013730-8d12c526-dbf1-4157-9e7e-50f6d5856466.pdf",
+        "publicUrl": "http://localhost:3030/files/1767191013730-8d12c526-dbf1-4157-9e7e-50f6d5856466.pdf"
+      },
+      "extractedText": "(No text could be extracted. This PDF may be scanned/image-based. Install GraphicsMagick for OCR support.)",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [],
+      "createdAt": "2025-12-31T14:23:33.731Z",
+      "updatedAt": "2025-12-31T14:23:33.831Z",
+      "submittedAt": null,
+      "extractMeta": {
+        "method": "none",
+        "pages": 1
+      }
+    },
+    {
+      "id": "cf365fbe-cc33-449c-bd87-6e59450e9527",
+      "status": "review",
+      "file": {
+        "originalName": "2528083-1 part 2.pdf",
+        "mimeType": "application/pdf",
+        "size": 82697,
+        "storedPath": "data\\uploads\\1767191039545-f2b6fe10-1313-4c21-b191-104e001dc750.pdf",
+        "fileName": "1767191039545-f2b6fe10-1313-4c21-b191-104e001dc750.pdf",
+        "publicUrl": "http://localhost:3030/files/1767191039545-f2b6fe10-1313-4c21-b191-104e001dc750.pdf"
+      },
+      "extractedText": "(No text could be extracted. This PDF may be scanned/image-based. Install GraphicsMagick for OCR support.)",
+      "lineItems": [],
+      "metadata": {},
+      "errors": [],
+      "createdAt": "2025-12-31T14:23:59.548Z",
+      "updatedAt": "2025-12-31T14:24:03.463Z",
+      "submittedAt": null,
+      "extractMeta": {
+        "method": "none",
+        "pages": 1
+      }
     }
   ]
 }
