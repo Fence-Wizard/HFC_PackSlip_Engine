@@ -6,142 +6,170 @@
   <title>Pack Slip Engine • Review</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="/assets/app.css" />
+  <style>
+    .document-viewer {
+      background: repeating-conic-gradient(#f1f5f9 0% 25%, #fff 0% 50%) 50% / 20px 20px;
+    }
+    /* Autocomplete dropdown */
+    .autocomplete-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 0.5rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .autocomplete-item {
+      padding: 0.5rem 0.75rem;
+      cursor: pointer;
+      font-size: 0.8rem;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .autocomplete-item:hover, .autocomplete-item.selected {
+      background: #eff6ff;
+    }
+    .autocomplete-item:last-child {
+      border-bottom: none;
+    }
+    .autocomplete-match {
+      background: #fef08a;
+      font-weight: 600;
+    }
+    .field-wrapper {
+      position: relative;
+    }
+  </style>
 </head>
-<body class="bg-slate-50 text-slate-900">
-  <header class="border-b bg-white/70 backdrop-blur">
-    <div class="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
+<body class="bg-slate-100 text-slate-900 h-screen flex flex-col">
+  <!-- Header -->
+  <header class="border-b bg-white shadow-sm flex-shrink-0">
+    <div class="px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <a href="/upload.html" class="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-semibold">PS</a>
+        <a href="/upload.html" class="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center font-semibold text-sm">PS</a>
         <div>
-          <div class="font-semibold leading-tight">Pack Slip Engine</div>
-          <div class="text-xs text-slate-500" id="subtitle">Review & confirm</div>
+          <div class="font-semibold leading-tight text-sm">Pack Slip Engine</div>
+          <div class="text-xs text-slate-500" id="fileName">Loading...</div>
         </div>
       </div>
-      <div class="flex items-center gap-3">
-        <a href="/upload.html" class="text-sm px-3 py-2 rounded-xl border border-slate-200 hover:bg-white">New upload</a>
+      <div class="flex items-center gap-2">
+        <select id="vendorSelect" class="text-sm px-2 py-1.5 border border-slate-300 rounded-lg bg-white">
+          <option value="">Auto-detect vendor</option>
+        </select>
+        <button id="submitBtn" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium disabled:opacity-50">
+          ✓ Confirm & Send
+        </button>
+        <a href="/upload.html" class="text-sm px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50">New</a>
       </div>
     </div>
   </header>
 
-  <main class="mx-auto max-w-6xl px-4 py-8 space-y-6">
-    <section class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div class="min-w-0">
-          <h1 class="text-xl font-semibold">Review extraction</h1>
-          <p class="mt-1 text-sm text-slate-600">
-            Confirm the received items before we notify Slack and email via n8n.
-          </p>
+  <!-- Main Content: Side by Side -->
+  <div class="flex-1 flex overflow-hidden">
+    <!-- Left: Document Viewer -->
+    <div class="w-1/2 border-r bg-slate-200 flex flex-col">
+      <div class="px-3 py-2 bg-slate-700 text-white text-sm font-medium flex items-center justify-between">
+        <span>📄 Original Document</span>
+        <a id="openFileLink" href="#" target="_blank" class="text-blue-300 hover:text-white text-xs hidden">
+          Open full size ↗
+        </a>
+      </div>
+      <div class="flex-1 overflow-auto document-viewer p-4 flex items-start justify-center">
+        <div id="docLoading" class="text-slate-500 text-sm mt-20">Loading document...</div>
+        <img id="docImage" class="max-w-full shadow-lg rounded hidden" alt="Pack slip document" />
+        <div id="docError" class="text-red-600 text-sm mt-20 hidden">Could not load document</div>
+      </div>
+    </div>
+
+    <!-- Right: Editable Line Items -->
+    <div class="w-1/2 flex flex-col bg-white">
+      <div class="px-4 py-2 bg-slate-50 border-b flex items-center justify-between">
+        <div>
+          <span class="font-medium text-sm">Line Items</span>
+          <span id="itemCount" class="text-xs text-slate-500 ml-2">(0 items)</span>
         </div>
-        <div class="flex gap-3">
-          <button id="addRowBtn" class="px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-sm">
-            + Add item
+        <div class="flex gap-2">
+          <button id="addRowBtn" class="text-xs px-2 py-1 rounded border border-slate-300 hover:bg-slate-100">
+            + Add
           </button>
-          <button id="submitBtn" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium disabled:opacity-50">
-            Confirm & Send
+          <button id="reparseBtn" class="text-xs px-2 py-1 rounded border border-blue-300 text-blue-700 hover:bg-blue-50">
+            🔄 Re-parse
           </button>
         </div>
       </div>
-
-      <!-- Vendor Selection Bar -->
-      <div id="vendorBar" class="mt-5 p-4 rounded-xl border border-slate-200 bg-slate-50 hidden">
-        <div class="flex flex-wrap items-center gap-4">
-          <div class="flex items-center gap-2">
-            <span class="text-sm font-medium">Vendor:</span>
-            <select id="vendorSelect" class="px-3 py-2 border border-slate-300 rounded-xl bg-white text-sm focus:ring-2 focus:ring-slate-900/20">
-              <option value="">Auto-detect</option>
-            </select>
-          </div>
-          <div id="vendorStatus" class="text-sm text-slate-600"></div>
-          <button id="reparseVendorBtn" class="ml-auto px-4 py-2 rounded-xl bg-slate-800 text-white text-sm hover:bg-slate-700">
-            Re-parse with selected vendor
-          </button>
-        </div>
-        <!-- Manual intervention alert -->
-        <div id="manualAlert" class="mt-3 p-3 rounded-lg bg-amber-50 border border-amber-200 hidden">
-          <div class="flex items-start gap-3">
-            <span class="text-amber-500 text-lg">⚠️</span>
-            <div class="flex-1">
-              <div class="font-medium text-amber-800">No parsing profile for this vendor</div>
-              <div class="text-sm text-amber-700 mt-1">
-                This vendor doesn't have a custom parsing profile yet. 
-                Line items may need manual review.
-              </div>
-              <button id="flagProfileBtn" class="mt-2 px-3 py-1.5 rounded-lg bg-amber-500 text-white text-sm hover:bg-amber-600">
-                Request Profile Creation
-              </button>
+      
+      <!-- Quick info bar with tips -->
+      <div class="px-4 py-2 bg-gradient-to-r from-blue-50 to-emerald-50 border-b">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-4 text-xs">
+            <div class="flex items-center gap-1.5 text-blue-700">
+              <span>👁️</span>
+              <span><strong>Compare</strong></span>
+            </div>
+            <div class="flex items-center gap-1.5 text-emerald-700">
+              <span>✏️</span>
+              <span><strong>Edit</strong></span>
+            </div>
+            <div class="flex items-center gap-1.5 text-purple-700">
+              <span>💡</span>
+              <span><strong>Suggestions appear as you type</strong></span>
             </div>
           </div>
+          <button id="helpToggle" class="text-xs text-slate-500 hover:text-slate-700 underline">Need help?</button>
+        </div>
+        <!-- Expandable help section -->
+        <div id="helpPanel" class="hidden mt-3 pt-3 border-t border-blue-200 text-xs text-slate-600 space-y-2">
+          <p><strong>How to use:</strong></p>
+          <ol class="list-decimal ml-4 space-y-1">
+            <li>Look at the <strong>document on the left</strong> - this is your pack slip</li>
+            <li>Check the <strong>line items on the right</strong> - these were automatically extracted</li>
+            <li>If anything is wrong (quantity, unit, description), <strong>click and fix it</strong></li>
+            <li>Start typing in Description to see <strong>suggestions from the document</strong></li>
+            <li>Use <strong>+ Add</strong> if items are missing, or <strong>×</strong> to remove extras</li>
+            <li>When done, click <strong>Confirm & Send</strong></li>
+          </ol>
+          <p class="text-amber-700 mt-2">💡 <strong>Tip:</strong> The scanner sometimes misreads numbers (e.g., "20" instead of "200"). Always verify quantities!</p>
         </div>
       </div>
-
-      <div class="mt-5 grid gap-4 md:grid-cols-3">
-        <div>
-          <label class="text-xs font-medium text-slate-600">Vendor Name</label>
-          <input id="vendor" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/20"
-            placeholder="e.g., ABC Supply" />
-        </div>
-        <div>
-          <label class="text-xs font-medium text-slate-600">PO / Job #</label>
-          <input id="po" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/20"
-            placeholder="e.g., PO-12345 or Job-67890" />
-        </div>
-        <div>
-          <label class="text-xs font-medium text-slate-600">Received date</label>
-          <input id="receivedDate" type="date" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/20" />
-        </div>
-      </div>
-
-      <div class="mt-4 text-xs text-slate-500">
-        <span class="font-medium text-slate-700" id="fileName"></span>
-        <span class="mx-2">•</span>
-        <span id="uploadedAt"></span>
-      </div>
-    </section>
-
-    <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-      <div class="px-6 py-4 border-b flex items-center justify-between">
-        <h2 class="font-semibold">Line items</h2>
-        <div class="text-xs text-slate-500">Edit any values before confirming</div>
-      </div>
-
-      <div class="overflow-auto">
-        <table class="min-w-full text-sm">
-          <thead class="bg-slate-50 text-slate-600">
+      
+      <!-- Scrollable items list -->
+      <div class="flex-1 overflow-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-100 sticky top-0">
             <tr>
-              <th class="text-left font-medium px-4 py-3 w-32">SKU</th>
-              <th class="text-left font-medium px-4 py-3">Description</th>
-              <th class="text-left font-medium px-4 py-3 w-24">Qty</th>
-              <th class="text-left font-medium px-4 py-3 w-24">UOM</th>
-              <th class="px-4 py-3 w-14"></th>
+              <th class="text-left font-medium px-3 py-2 text-slate-600 w-20">Qty</th>
+              <th class="text-left font-medium px-3 py-2 text-slate-600 w-16">Unit</th>
+              <th class="text-left font-medium px-3 py-2 text-slate-600">Description</th>
+              <th class="w-10"></th>
             </tr>
           </thead>
           <tbody id="itemsBody" class="divide-y"></tbody>
         </table>
       </div>
-
-      <div class="px-6 py-4 bg-slate-50 border-t flex items-center justify-between">
-        <div class="text-sm text-slate-600">
-          Total items: <span id="count" class="font-medium text-slate-900">0</span>
+      
+      <!-- Bottom bar with metadata -->
+      <div class="border-t bg-slate-50 px-4 py-3 flex-shrink-0">
+        <div class="grid grid-cols-3 gap-3 text-sm">
+          <div>
+            <label class="text-xs font-medium text-slate-500 block mb-1">Vendor</label>
+            <input id="vendor" class="w-full rounded border border-slate-300 px-2 py-1.5 text-sm" placeholder="Vendor name" />
+          </div>
+          <div>
+            <label class="text-xs font-medium text-slate-500 block mb-1">PO / Job #</label>
+            <input id="po" class="w-full rounded border border-slate-300 px-2 py-1.5 text-sm" placeholder="PO-12345" />
+          </div>
+          <div>
+            <label class="text-xs font-medium text-slate-500 block mb-1">Date Received</label>
+            <input id="receivedDate" type="date" class="w-full rounded border border-slate-300 px-2 py-1.5 text-sm" />
+          </div>
         </div>
-        <button id="autoParseBtn" class="text-sm px-4 py-2 rounded-xl border border-slate-200 hover:bg-white">
-          Re-run best-effort parse
-        </button>
       </div>
-    </section>
-
-    <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-      <div class="px-6 py-4 border-b flex items-center justify-between">
-        <h2 class="font-semibold">Extracted text</h2>
-        <button id="copyTextBtn" class="text-sm px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50">
-          Copy text
-        </button>
-      </div>
-      <div class="p-6">
-        <pre id="extractedText" class="mono text-xs whitespace-pre-wrap break-words bg-slate-50 border border-slate-200 rounded-2xl p-4 max-h-[380px] overflow-auto"></pre>
-      </div>
-    </section>
-
-  </main>
+    </div>
+  </div>
 
   <script type="module">
     import { qs, qsa, toast, confirmModal, formatDateTime } from "/assets/ui.js";
@@ -150,39 +178,43 @@
     const params = new URLSearchParams(location.search);
     const id = params.get("id");
 
+    // Elements
     const submitBtn = qs("#submitBtn");
     const addRowBtn = qs("#addRowBtn");
-    const autoParseBtn = qs("#autoParseBtn");
+    const reparseBtn = qs("#reparseBtn");
     const itemsBody = qs("#itemsBody");
-    const countEl = qs("#count");
-
+    const itemCount = qs("#itemCount");
     const vendorEl = qs("#vendor");
     const poEl = qs("#po");
     const receivedDateEl = qs("#receivedDate");
     const fileNameEl = qs("#fileName");
-    const uploadedAtEl = qs("#uploadedAt");
-    const extractedTextEl = qs("#extractedText");
-
-    const copyTextBtn = qs("#copyTextBtn");
-    
-    // Vendor-related elements
-    const vendorBar = qs("#vendorBar");
     const vendorSelect = qs("#vendorSelect");
-    const vendorStatus = qs("#vendorStatus");
-    const reparseVendorBtn = qs("#reparseVendorBtn");
-    const manualAlert = qs("#manualAlert");
-    const flagProfileBtn = qs("#flagProfileBtn");
+    const docImage = qs("#docImage");
+    const docLoading = qs("#docLoading");
+    const docError = qs("#docError");
+    const openFileLink = qs("#openFileLink");
 
     let pack = null;
     let vendorsList = [];
+    let ocrTextChunks = []; // Parsed chunks from OCR for suggestions
+    let activeDropdown = null;
+    let selectedSuggestionIdx = -1;
+
+    // Help panel toggle
+    const helpToggle = qs("#helpToggle");
+    const helpPanel = qs("#helpPanel");
+    helpToggle?.addEventListener("click", () => {
+      helpPanel.classList.toggle("hidden");
+      helpToggle.textContent = helpPanel.classList.contains("hidden") ? "Need help?" : "Hide help";
+    });
 
     if (!id) {
-      toast("Missing pack slip id in URL. Go back and upload again.", "error", 7000);
+      toast("Missing pack slip id. Please upload again.", "error", 7000);
     } else {
       loadVendors();
       load();
     }
-    
+
     async function loadVendors() {
       try {
         const data = await apiGet("/api/vendors");
@@ -192,45 +224,17 @@
         console.error("Failed to load vendors:", e);
       }
     }
-    
+
     function populateVendorSelect() {
-      // Clear existing options except first
       while (vendorSelect.options.length > 1) {
         vendorSelect.remove(1);
       }
-      
-      const withProfile = vendorsList.filter(v => v.hasProfile);
-      const withoutProfile = vendorsList.filter(v => !v.hasProfile);
-      
-      if (withProfile.length > 0) {
-        const optGroup1 = document.createElement("optgroup");
-        optGroup1.label = "— With parsing profiles —";
-        withProfile.forEach(v => {
-          const opt = document.createElement("option");
-          opt.value = v.id;
-          opt.textContent = v.name + " ✓";
-          optGroup1.appendChild(opt);
-        });
-        vendorSelect.appendChild(optGroup1);
-      }
-      
-      if (withoutProfile.length > 0) {
-        const optGroup2 = document.createElement("optgroup");
-        optGroup2.label = "— Generic parser —";
-        withoutProfile.forEach(v => {
-          const opt = document.createElement("option");
-          opt.value = v.id;
-          opt.textContent = v.name;
-          optGroup2.appendChild(opt);
-        });
-        vendorSelect.appendChild(optGroup2);
-      }
-      
-      // Manual option
-      const manualOpt = document.createElement("option");
-      manualOpt.value = "_manual";
-      manualOpt.textContent = "⚠️ Unknown Vendor";
-      vendorSelect.appendChild(manualOpt);
+      vendorsList.forEach(v => {
+        const opt = document.createElement("option");
+        opt.value = v.id;
+        opt.textContent = v.name + (v.hasProfile ? " ✓" : "");
+        vendorSelect.appendChild(opt);
+      });
     }
 
     async function load() {
@@ -240,207 +244,568 @@
         hydrate(pack);
         submitBtn.disabled = false;
       } catch (e) {
+        toast("Failed to load pack slip.", "error");
       }
     }
 
     function hydrate(p) {
-      fileNameEl.textContent = p.fileName || `PackSlip ${p.id}`;
-      uploadedAtEl.textContent = p.uploadedAt ? `Uploaded ${formatDateTime(p.uploadedAt)}` : "";
-      vendorEl.value = p.fields?.vendor || "";
+      fileNameEl.textContent = p.fileName || "Pack Slip";
+      vendorEl.value = p.fields?.vendor || p.vendorInfo?.name || "";
       poEl.value = p.fields?.po || "";
-      receivedDateEl.value = p.fields?.receivedDate || new Date().toISOString().slice(0,10);
+      receivedDateEl.value = p.fields?.receivedDate || new Date().toISOString().slice(0, 10);
+      
+      if (p.vendorInfo?.id) {
+        vendorSelect.value = p.vendorInfo.id;
+      }
 
-      extractedTextEl.textContent = p.extractedText || "(No extracted text yet.)";
+      // Extract text chunks for autocomplete suggestions
+      ocrTextChunks = extractTextChunks(p.extractedText || "");
+      console.log(`Extracted ${ocrTextChunks.length} text chunks for suggestions`);
 
       renderItems(Array.isArray(p.lineItems) ? p.lineItems : []);
-      
-      // Update vendor bar
-      updateVendorBar(p.vendorInfo);
+      loadDocumentImage(p);
     }
     
-    function updateVendorBar(vendorInfo) {
-      vendorBar.classList.remove("hidden");
+    /**
+     * Extract meaningful text chunks from OCR text for autocomplete
+     * Looks for product-like patterns: numbers followed by text blocks
+     */
+    function extractTextChunks(text) {
+      if (!text) return [];
+      const chunks = [];
+      const seen = new Set();
       
-      // Set the dropdown to current vendor
-      if (vendorInfo?.id) {
-        vendorSelect.value = vendorInfo.id;
-      } else {
-        vendorSelect.value = "";
+      function addChunk(chunk, priority = 0) {
+        const cleaned = chunk.trim()
+          .replace(/\s+/g, ' ')  // Normalize whitespace
+          .replace(/^\*+|\*+$/g, '');  // Remove leading/trailing asterisks
+        const key = cleaned.toLowerCase();
+        if (cleaned.length >= 8 && !seen.has(key)) {
+          seen.add(key);
+          chunks.push({ text: cleaned, priority });
+        }
       }
       
-      // Update status text
-      if (vendorInfo?.source === "user") {
-        vendorStatus.innerHTML = `<span class="text-green-600">✓ User selected</span>: ${vendorInfo.name || "Unknown"}`;
-      } else if (vendorInfo?.source === "auto") {
-        const confidence = Math.round((vendorInfo.confidence || 0) * 100);
-        vendorStatus.innerHTML = `<span class="text-blue-600">⚡ Auto-detected</span>: ${vendorInfo.name || "Unknown"} (${confidence}% confidence)`;
-      } else {
-        vendorStatus.innerHTML = `<span class="text-slate-500">No vendor detected</span>`;
+      const lines = text.split(/\n/);
+      
+      // Skip patterns for headers/footers
+      const skipPatterns = /signature|received by|verify all|terms|conditions|email only|payment|stephens pipe|hurricane fence|po box|richmond|bladensburg|russell springs|customer acct|billing date|sales person|shipped via|quote valid|pack slip|order #|fax number|contact name|sold to|ship to/i;
+      
+      // Product keywords that indicate a valid product line
+      const productKeywords = /blk|vnl|galv|vinyl|black|green|white|grn|wht|chain|mesh|fabric|post|rail|cap|barb|slat|wire|tension|brace|gate|fitting|core|2a|2x|kt|kk|sp\d|arm|dome|loop|band/i;
+      
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.length < 8) continue;
+        
+        // Skip header/footer lines
+        if (skipPatterns.test(trimmed)) continue;
+        
+        // Must contain product keywords to be relevant
+        if (!productKeywords.test(trimmed)) continue;
+        
+        // Pattern 1: Lines starting with qty patterns
+        // e.g., "50 50 0 ft BLK VNL 2A 2x8(11core)x96in KT 50ft/rll"
+        // e.g., "50| 50| 0|ft |BLK VNL..."
+        const qtyDescMatch = trimmed.match(/^\s*(\d+)[\s|]+(\d+)[\s|]+\d*[\s|]*([a-z]{1,4})[\s|]+(.+)$/i);
+        if (qtyDescMatch) {
+          const desc = qtyDescMatch[4].trim();
+          if (desc.length > 5 && productKeywords.test(desc)) {
+            addChunk(desc, 10);  // High priority - clean description
+          }
+        }
+        
+        // Pattern 2: Product descriptions starting with BLK, GALV, etc.
+        if (/^(BLK|BK|GRN|WHT|GALV)/i.test(trimmed)) {
+          addChunk(trimmed, 8);
+        }
+        
+        // Pattern 3: Lines containing fence keywords - extract just the product part
+        const productMatch = trimmed.match(/((?:BLK|BK|GALV|GRN|WHT)\s*(?:VNL)?[^*\n]{5,80})/i);
+        if (productMatch) {
+          addChunk(productMatch[1], 9);
+        }
+        
+        // Pattern 4: Add the whole line if it has product keywords (lower priority)
+        addChunk(trimmed, 3);
       }
       
-      // Show manual alert if needed
-      if (vendorInfo?.manualIntervention || (vendorInfo?.id && !vendorInfo?.hasProfile)) {
-        manualAlert.classList.remove("hidden");
-      } else {
-        manualAlert.classList.add("hidden");
+      // Also extract product patterns directly using regex across the entire text
+      const productPatterns = [
+        { pattern: /BLK\s*VNL\s*2A\s*2x\d+[^*\n]{5,60}/gi, priority: 10 },
+        { pattern: /BLK\s*VNL\s*[^*\n]{5,80}/gi, priority: 9 },
+        { pattern: /BK\s*VNL\s*[^*\n]{5,80}/gi, priority: 9 },
+        { pattern: /GALV\s*[^*\n]{5,80}/gi, priority: 8 },
+        { pattern: /(?:BARB|ARM|POST|RAIL|CAP|GATE|MESH|FABRIC|TENSION|BRACE)[^*\n]{5,60}/gi, priority: 7 },
+      ];
+      
+      for (const { pattern, priority } of productPatterns) {
+        const matches = text.match(pattern) || [];
+        matches.forEach(m => {
+          // Clean up the match - remove qty prefixes if present
+          let cleaned = m.trim();
+          const prefixMatch = cleaned.match(/^\d+[\s|]+\d+[\s|]+\d*[\s|]*[a-z]{1,4}[\s|]+(.+)$/i);
+          if (prefixMatch) {
+            cleaned = prefixMatch[1].trim();
+          }
+          addChunk(cleaned, priority);
+        });
+      }
+      
+      // Sort by priority (higher first) and return just the text
+      chunks.sort((a, b) => b.priority - a.priority);
+      console.log("Extracted OCR chunks:", chunks.map(c => c.text));
+      return chunks.map(c => c.text);
+    }
+    
+    /**
+     * Find suggestions that match the input
+     * Uses word-based matching: all typed words must appear in the suggestion (in any order)
+     * Also learns from already-entered line items for pattern suggestions
+     * @param {string} input - What the user typed
+     * @param {number} rowIdx - Which row is being edited
+     * @param {string} qty - Quantity in the same row (for context)
+     * @param {string} unit - Unit in the same row (for context)
+     */
+    function findSuggestions(input, rowIdx = -1, qty = "", unit = "", maxResults = 8) {
+      // Get descriptions already used in other rows (and collect for pattern learning)
+      const usedDescriptions = new Set();
+      const existingItems = [];
+      (pack?.lineItems || []).forEach((item, i) => {
+        if (i !== rowIdx && item.description) {
+          usedDescriptions.add(item.description.toLowerCase().trim());
+          existingItems.push({
+            description: item.description,
+            unit: item.uom || "",
+            qty: item.qty || ""
+          });
+        }
+      });
+      
+      const matches = [];
+      const lower = (input || "").toLowerCase().trim();
+      // Split input into words (e.g., "blk 2a" -> ["blk", "2a"])
+      const inputWords = lower.split(/\s+/).filter(w => w.length > 0);
+      
+      const fenceKeywords = /blk|vnl|galv|post|rail|cap|mesh|fabric|wire|barb|slat|core|ft\/|rll|2a|2x|kt|sp\d/i;
+      
+      // STRATEGY 1: Match from OCR text chunks
+      for (const chunk of ocrTextChunks) {
+        const chunkLower = chunk.toLowerCase();
+        
+        // Skip if already used in another row
+        if (usedDescriptions.has(chunkLower.trim())) continue;
+        
+        // Must contain fence keywords to be a valid product
+        if (!fenceKeywords.test(chunkLower)) continue;
+        
+        // Check if ALL input words appear in the chunk (word-based matching)
+        const allWordsMatch = inputWords.length === 0 || 
+          inputWords.every(word => chunkLower.includes(word));
+        
+        if (!allWordsMatch) continue;
+        
+        // Calculate relevance score
+        let score = 0;
+        
+        // Big bonus if starts with first input word
+        if (inputWords.length > 0 && chunkLower.startsWith(inputWords[0])) score += 100;
+        
+        // Bonus for each matching word
+        score += inputWords.filter(w => chunkLower.includes(w)).length * 20;
+        
+        // Bonus if chunk contains the quantity number (context match)
+        if (qty && chunkLower.includes(qty)) score += 50;
+        
+        // Bonus if chunk contains the unit
+        if (unit) {
+          const unitLower = unit.toLowerCase();
+          if (chunkLower.includes(unitLower) || 
+              chunkLower.includes(`${qty}${unitLower}`) ||
+              chunkLower.includes(`${qty} ${unitLower}`)) {
+            score += 30;
+          }
+        }
+        
+        score -= Math.max(0, chunk.length - 40) / 20;
+        
+        matches.push({ text: chunk, score, source: "ocr" });
+      }
+      
+      // STRATEGY 2: Learn from already-entered items with same unit
+      // If user entered "200 ft BLK VNL 2A 2x9...", suggest similar for "50 ft" item
+      if (unit && inputWords.length > 0) {
+        const unitLower = unit.toLowerCase();
+        const sameUnitItems = existingItems.filter(item => 
+          (item.unit || "").toLowerCase() === unitLower &&
+          fenceKeywords.test(item.description)
+        );
+        
+        for (const item of sameUnitItems) {
+          const descLower = item.description.toLowerCase();
+          
+          // Check if input words match (partial match OK for learning)
+          const partialMatch = inputWords.some(word => descLower.includes(word));
+          
+          if (partialMatch) {
+            let score = 60; // Base score for pattern learning
+            
+            // Bonus for matching first word
+            if (inputWords.length > 0 && descLower.startsWith(inputWords[0])) score += 40;
+            
+            // Bonus for same unit
+            score += 20;
+            
+            // Add as template suggestion (mark it)
+            matches.push({ 
+              text: item.description + " ⟵ similar item", 
+              score, 
+              source: "pattern",
+              original: item.description 
+            });
+          }
+        }
+      }
+      
+      // STRATEGY 3: Search raw OCR text
+      if (pack?.extractedText) {
+        const lines = pack.extractedText.split(/\n/);
+        for (const line of lines) {
+          const lineLower = line.toLowerCase().trim();
+          if (lineLower.length < 10 || lineLower.length > 120) continue;
+          
+          if (!fenceKeywords.test(lineLower)) continue;
+          
+          if (/signature|received|verify|terms|conditions|email|payment|customer|billing|sales|stephens|hurricane|richmond|po box/i.test(lineLower)) continue;
+          
+          const allWordsMatch = inputWords.length === 0 || 
+            inputWords.every(word => lineLower.includes(word));
+          
+          if (!allWordsMatch) continue;
+          
+          // Extract just the description part
+          let desc = line.trim();
+          const prefixMatch = desc.match(/^\s*\d+\s+\d+\s+\d*\s*[a-z]{1,4}\s+(.+)$/i);
+          if (prefixMatch) {
+            desc = prefixMatch[1].trim();
+          }
+          
+          if (desc.length < 10) continue;
+          if (usedDescriptions.has(desc.toLowerCase())) continue;
+          if (matches.some(m => m.text.toLowerCase() === desc.toLowerCase())) continue;
+          
+          let score = 20;
+          if (inputWords.length > 0 && desc.toLowerCase().startsWith(inputWords[0])) score += 80;
+          score += inputWords.filter(w => desc.toLowerCase().includes(w)).length * 15;
+          if (qty && desc.includes(qty)) score += 40;
+          
+          matches.push({ text: desc, score, source: "raw" });
+        }
+      }
+      
+      // Sort by relevance
+      matches.sort((a, b) => b.score - a.score);
+      
+      // Deduplicate and format
+      const seen = new Set();
+      const unique = [];
+      for (const m of matches) {
+        const key = (m.original || m.text).toLowerCase().trim().replace(/ ⟵.*$/, "");
+        if (!seen.has(key)) {
+          seen.add(key);
+          unique.push(m.text);
+          if (unique.length >= maxResults) break;
+        }
+      }
+      
+      return unique;
+    }
+    
+    /**
+     * Show autocomplete dropdown
+     */
+    function showAutocomplete(input, dropdown, suggestions) {
+      if (suggestions.length === 0) {
+        hideAutocomplete(dropdown);
+        return;
+      }
+      
+      const query = input.value.toLowerCase();
+      dropdown.innerHTML = suggestions.map((s, i) => {
+        // Highlight the matching part
+        const highlighted = s.replace(new RegExp(`(${escapeRegex(query)})`, 'gi'), '<span class="autocomplete-match">$1</span>');
+        return `<div class="autocomplete-item" data-idx="${i}" data-value="${escapeAttr(s)}">${highlighted}</div>`;
+      }).join("");
+      
+      dropdown.classList.remove("hidden");
+      activeDropdown = dropdown;
+      selectedSuggestionIdx = -1;
+      
+      // Add click handlers
+      dropdown.querySelectorAll(".autocomplete-item").forEach(item => {
+        item.addEventListener("click", () => {
+          // Strip pattern learning suffix if present
+          let value = item.dataset.value;
+          if (value.includes(" ⟵ similar item")) {
+            value = value.replace(" ⟵ similar item", "");
+          }
+          input.value = value;
+          hideAutocomplete(dropdown);
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+        });
+      });
+    }
+    
+    function hideAutocomplete(dropdown) {
+      if (dropdown) {
+        dropdown.classList.add("hidden");
+        dropdown.innerHTML = "";
+      }
+      activeDropdown = null;
+      selectedSuggestionIdx = -1;
+    }
+    
+    function escapeRegex(str) {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function loadDocumentImage(p) {
+      docLoading.classList.add("hidden");
+      docImage.classList.add("hidden");
+      docError.classList.add("hidden");
+      openFileLink.classList.add("hidden");
+
+      // Use preview image for PDFs, or original file for images
+      const imageUrl = p.previewUrl || (p.fileMimeType?.startsWith("image/") ? p.fileUrl : null);
+      
+      if (!imageUrl) {
+        // If no preview and it's a PDF, show the file link
+        if (p.fileUrl) {
+          openFileLink.href = p.fileUrl;
+          openFileLink.classList.remove("hidden");
+          docError.textContent = "PDF preview not available.";
+          docError.classList.remove("hidden");
+        } else {
+          docError.textContent = "Document not available";
+          docError.classList.remove("hidden");
+        }
+        return;
+      }
+
+      docLoading.textContent = "Loading...";
+      docLoading.classList.remove("hidden");
+
+      docImage.onload = () => {
+        docLoading.classList.add("hidden");
+        docImage.classList.remove("hidden");
+      };
+      docImage.onerror = () => {
+        docLoading.classList.add("hidden");
+        docError.textContent = "Failed to load image";
+        docError.classList.remove("hidden");
+      };
+      docImage.src = imageUrl;
+
+      if (p.fileUrl) {
+        openFileLink.href = p.fileUrl;
+        openFileLink.classList.remove("hidden");
       }
     }
 
     function renderItems(items) {
       itemsBody.innerHTML = "";
-      items.forEach((it, idx) => itemsBody.appendChild(rowEl(it, idx)));
-      updateCount();
       if (items.length === 0) {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td colspan="5" class="px-4 py-8 text-center text-slate-500">
-            No line items detected yet. Click “+ Add item” to start.
+          <td colspan="4" class="px-4 py-8 text-center text-slate-400">
+            No items detected. Click "+ Add" to add manually.
           </td>
         `;
         itemsBody.appendChild(tr);
+      } else {
+        items.forEach((it, idx) => itemsBody.appendChild(rowEl(it, idx)));
       }
+      updateCount();
     }
 
     function rowEl(item, idx) {
       const tr = document.createElement("tr");
-      tr.className = "align-top";
+      tr.className = "hover:bg-slate-50";
       tr.dataset.idx = String(idx);
 
       tr.innerHTML = `
-        <td class="px-4 py-3">
-          <input data-k="sku" class="w-full rounded-lg border border-slate-200 px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/20"
-            placeholder="SKU" value="${escapeAttr(item.sku)}" />
-        </td>
-        <td class="px-4 py-3">
-          <input data-k="description" class="w-full rounded-lg border border-slate-200 px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/20"
-            placeholder="Description" value="${escapeAttr(item.description)}" />
-        </td>
-        <td class="px-4 py-3">
+        <td class="px-3 py-2">
           <input data-k="qty" type="number" step="1" min="0"
-            class="w-full rounded-lg border border-slate-200 px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/20"
-            placeholder="0" value="${escapeAttr(item.qty)}" />
+            class="w-full rounded border border-slate-300 px-2 py-1.5 text-sm font-medium text-center"
+            value="${escapeAttr(item.qty)}" />
         </td>
-        <td class="px-4 py-3">
-          <input data-k="uom" class="w-full rounded-lg border border-slate-200 px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/20"
+        <td class="px-3 py-2">
+          <input data-k="uom"
+            class="w-full rounded border border-slate-300 px-2 py-1.5 text-sm text-center"
             placeholder="ea" value="${escapeAttr(item.uom)}" />
         </td>
-        <td class="px-4 py-3 text-right">
-          <button class="p-2 rounded-lg hover:bg-slate-100" data-del aria-label="Delete row">🗑️</button>
+        <td class="px-3 py-2">
+          <div class="field-wrapper">
+            <input data-k="description"
+              class="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
+              placeholder="Start typing to see suggestions..." value="${escapeAttr(item.description)}" 
+              autocomplete="off" />
+            <div class="autocomplete-dropdown hidden" data-dropdown></div>
+          </div>
+        </td>
+        <td class="px-2 py-2 text-center">
+          <button class="text-slate-400 hover:text-red-500 text-lg" data-del title="Remove">×</button>
         </td>
       `;
 
       tr.querySelector("[data-del]").addEventListener("click", () => {
-        const idx = Number(tr.dataset.idx);
-        if (!pack?.lineItems) pack.lineItems = [];
-        pack.lineItems.splice(idx, 1);
+        const i = Number(tr.dataset.idx);
+        pack.lineItems.splice(i, 1);
         renderItems(pack.lineItems);
       });
 
+      // Get the description field and its dropdown
+      const descInput = tr.querySelector("input[data-k='description']");
+      const dropdown = tr.querySelector("[data-dropdown]");
+      
+      // Get qty and unit inputs for context
+      const qtyInput = tr.querySelector("input[data-k='qty']");
+      const unitInput = tr.querySelector("input[data-k='uom']");
+      
       qsa("input", tr).forEach(inp => {
         inp.addEventListener("input", () => {
           const i = Number(tr.dataset.idx);
           const k = inp.dataset.k;
-          if (!pack?.lineItems) pack.lineItems = [];
           pack.lineItems[i] = pack.lineItems[i] || {};
-          pack.lineItems[i][k] = normalizeValue(k, inp.value);
+          pack.lineItems[i][k] = k === "qty" ? (inp.value === "" ? "" : Number(inp.value)) : inp.value;
           updateCount();
+          
+          // Show autocomplete for description field with context
+          if (k === "description" && dropdown) {
+            const qty = qtyInput?.value || "";
+            const unit = unitInput?.value || "";
+            const suggestions = findSuggestions(inp.value, i, qty, unit);
+            showAutocomplete(inp, dropdown, suggestions);
+          }
+        });
+        
+        // Also show suggestions on focus for description field
+        if (inp.dataset.k === "description") {
+          inp.addEventListener("focus", () => {
+            const i = Number(tr.dataset.idx);
+            const qty = qtyInput?.value || "";
+            const unit = unitInput?.value || "";
+            // Show suggestions even with current value (or empty)
+            const suggestions = findSuggestions(inp.value, i, qty, unit);
+            if (suggestions.length > 0) {
+              showAutocomplete(inp, dropdown, suggestions);
+            }
+          });
+        }
+        
+        // Hide dropdown on blur (with delay to allow click)
+        inp.addEventListener("blur", () => {
+          setTimeout(() => {
+            if (dropdown) hideAutocomplete(dropdown);
+          }, 200);
+        });
+        
+        // Keyboard navigation for autocomplete
+        inp.addEventListener("keydown", (e) => {
+          if (!dropdown || dropdown.classList.contains("hidden")) return;
+          
+          const items = dropdown.querySelectorAll(".autocomplete-item");
+          if (items.length === 0) return;
+          
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            selectedSuggestionIdx = Math.min(selectedSuggestionIdx + 1, items.length - 1);
+            updateSelectedItem(items);
+          } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            selectedSuggestionIdx = Math.max(selectedSuggestionIdx - 1, 0);
+            updateSelectedItem(items);
+          } else if (e.key === "Enter" && selectedSuggestionIdx >= 0) {
+            e.preventDefault();
+            const selected = items[selectedSuggestionIdx];
+            if (selected) {
+              // Strip pattern learning suffix if present
+              let value = selected.dataset.value;
+              if (value.includes(" ⟵ similar item")) {
+                value = value.replace(" ⟵ similar item", "");
+              }
+              inp.value = value;
+              hideAutocomplete(dropdown);
+              inp.dispatchEvent(new Event("input", { bubbles: true }));
+            }
+          } else if (e.key === "Escape") {
+            hideAutocomplete(dropdown);
+          }
         });
       });
 
       return tr;
     }
-
-    function normalizeValue(k, v) {
-      if (k === "qty") return v === "" ? "" : Number(v);
-      return v ?? "";
+    
+    function updateSelectedItem(items) {
+      items.forEach((item, i) => {
+        item.classList.toggle("selected", i === selectedSuggestionIdx);
+      });
+      // Scroll selected item into view
+      if (selectedSuggestionIdx >= 0 && items[selectedSuggestionIdx]) {
+        items[selectedSuggestionIdx].scrollIntoView({ block: "nearest" });
+      }
     }
 
     function updateCount() {
-      const items = pack?.lineItems || [];
-      countEl.textContent = String(items.filter(x => (x.description || x.sku || x.qty || x.uom)).length);
+      const count = (pack?.lineItems || []).filter(x => x.description || x.qty).length;
+      itemCount.textContent = `(${count} item${count !== 1 ? "s" : ""})`;
     }
 
     addRowBtn.addEventListener("click", () => {
       if (!pack) return;
       if (!Array.isArray(pack.lineItems)) pack.lineItems = [];
-      pack.lineItems.push({ sku: "", description: "", qty: "", uom: "ea" });
+      pack.lineItems.push({ qty: "", uom: "ea", description: "" });
       renderItems(pack.lineItems);
+      // Focus the new qty field
+      const lastInput = itemsBody.querySelector("tr:last-child input[data-k='qty']");
+      lastInput?.focus();
     });
 
-    autoParseBtn.addEventListener("click", async () => {
-      if (!id) return toast("Missing id", "error");
-      autoParseBtn.disabled = true;
-      autoParseBtn.textContent = "Parsing…";
+    reparseBtn.addEventListener("click", async () => {
+      if (!id) return;
+      reparseBtn.disabled = true;
+      reparseBtn.textContent = "Parsing...";
       try {
-        const updated = await apiPost(`/api/packs/${encodeURIComponent(id)}/reparse`, {});
-        hydrate(updated);
-        toast("Re-parse complete.", "success");
-      } catch (e) {
-        // toast handled in api.js
-      } finally {
-        autoParseBtn.disabled = false;
-        autoParseBtn.textContent = "Re-run best-effort parse";
-      }
-    });
-    
-    // Re-parse with selected vendor
-    reparseVendorBtn.addEventListener("click", async () => {
-      if (!id) return toast("Missing id", "error");
-      const selectedVendorId = vendorSelect.value;
-      
-      reparseVendorBtn.disabled = true;
-      reparseVendorBtn.textContent = "Parsing…";
-      try {
-        const updated = await apiPost(`/api/packs/${encodeURIComponent(id)}/reparse`, { 
-          vendorId: selectedVendorId 
+        const selectedVendorId = vendorSelect.value;
+        const updated = await apiPost(`/api/packs/${encodeURIComponent(id)}/reparse`, {
+          vendorId: selectedVendorId || undefined
         });
-        hydrate(updated);
-        toast("Re-parse complete with vendor profile.", "success");
+        pack = { ...pack, ...updated };
+        renderItems(Array.isArray(updated.lineItems) ? updated.lineItems : []);
+        toast(`Found ${updated.lineItems?.length || 0} items.`, "success");
       } catch (e) {
-        // toast handled in api.js
+        toast("Re-parse failed.", "error");
       } finally {
-        reparseVendorBtn.disabled = false;
-        reparseVendorBtn.textContent = "Re-parse with selected vendor";
-      }
-    });
-    
-    // Flag for profile creation
-    flagProfileBtn.addEventListener("click", async () => {
-      if (!pack?.vendorInfo?.id) {
-        toast("No vendor selected to flag.", "warning");
-        return;
-      }
-      
-      try {
-        await apiPost(`/api/vendors/${encodeURIComponent(pack.vendorInfo.id)}/flag`, {
-          packSlipId: id,
-          reason: "Parsing profile requested from review page"
-        });
-        toast("Profile creation request submitted!", "success");
-        flagProfileBtn.textContent = "✓ Request Sent";
-        flagProfileBtn.disabled = true;
-      } catch (e) {
-        // toast handled in api.js
-      }
-    });
-
-    copyTextBtn.addEventListener("click", async () => {
-      try {
-        await navigator.clipboard.writeText(extractedTextEl.textContent || "");
-        toast("Copied extracted text.", "success");
-      } catch {
-        toast("Could not copy text (clipboard blocked).", "warning");
+        reparseBtn.disabled = false;
+        reparseBtn.textContent = "🔄 Re-parse";
       }
     });
 
     submitBtn.addEventListener("click", async () => {
       if (!pack) return;
 
+      const items = (pack.lineItems || []).filter(x => x.description || x.qty);
+      if (items.length === 0) {
+        toast("Please add at least one item before submitting.", "warning");
+        return;
+      }
+
       const ok = await confirmModal({
         title: "Confirm & Send",
-        body: "This will submit the confirmed items to n8n for email + Slack notification. Continue?",
+        body: `Submit ${items.length} item(s) to n8n for notification?`,
         confirmText: "Yes, send it",
-        cancelText: "Not yet"
+        cancelText: "Cancel"
       });
       if (!ok) return;
 
@@ -454,17 +819,18 @@
             po: poEl.value.trim(),
             receivedDate: receivedDateEl.value
           },
-          lineItems: (pack.lineItems || []).filter(x => x && (x.description || x.sku || x.qty || x.uom)),
+          lineItems: items,
           confirm: true
         };
 
         await apiPost(`/api/packs/${encodeURIComponent(id)}/submit`, payload);
-        toast("Submitted successfully.", "success");
+        toast("Submitted successfully!", "success");
         window.location.href = `/done.html?id=${encodeURIComponent(id)}`;
       } catch (e) {
+        toast("Submit failed.", "error");
       } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = "Confirm & Send";
+        submitBtn.textContent = "✓ Confirm & Send";
       }
     });
 
@@ -478,4 +844,3 @@
   </script>
 </body>
 </html>
-

@@ -34,9 +34,9 @@ function normalizeUnit(unit) {
   u = u.replace(/^[0oO]+/, "");
   
   if (/^(pc|pcs|piece|pieces|lpc)$/i.test(u)) return "pc";
-  if (/^(ft|feet|foot|lf|lft)$/i.test(u)) return "ft";
-  if (/^(ea|each|iee|bee)$/i.test(u)) return "ea";  // IEE/BEE are OCR errors
-  if (/^(rl|rll|roll|r11)$/i.test(u)) return "rl";  // r11 is OCR for rll
+  if (/^(ft|feet|foot|lf|lft|ift|oft|0ft|ooft|oof)$/i.test(u)) return "ft";  // oof, 0ft, oft are OCR errors
+  if (/^(ea|each|iee|bee|oea|0ea)$/i.test(u)) return "ea";  // IEE/BEE/oea are OCR errors
+  if (/^(rl|rll|roll|r11|ri1|rii)$/i.test(u)) return "rl";  // r11, ri1 are OCR for rll
   if (/^(bag|bags)$/i.test(u)) return "bag";
   if (/^(set|sets)$/i.test(u)) return "set";
   if (/^(box|bx)$/i.test(u)) return "box";
@@ -166,6 +166,12 @@ function parse(lines, profile = null) {
   // Start after header if found, otherwise from beginning
   const startIdx = headerIdx >= 0 ? headerIdx + 1 : 0;
   
+  // Log first 30 lines for debugging
+  logger.debug(`SPS parser: scanning from line ${startIdx}, total ${lines.length} lines`);
+  for (let d = startIdx; d < Math.min(startIdx + 15, lines.length); d++) {
+    logger.debug(`SPS line ${d}: "${cleanLine(lines[d]).substring(0, 80)}"`);
+  }
+  
   for (let i = startIdx; i < lines.length; i++) {
     const rawLine = lines[i];
     let line = cleanLine(rawLine);
@@ -177,15 +183,25 @@ function parse(lines, profile = null) {
     }
     
     // Skip metadata and address lines
-    if (shouldSkip(line) || line.length < 8) continue;
+    if (shouldSkip(line)) {
+      logger.debug(`SPS parser: skipping metadata line ${i}: "${line.substring(0, 50)}"`);
+      continue;
+    }
+    if (line.length < 8) continue;
     
     // Must contain fence-related keywords to be a valid line item
-    if (!isFenceProduct(line)) continue;
+    if (!isFenceProduct(line)) {
+      // Log lines that have numbers but no fence keywords - might be quantity lines
+      if (/^\s*\d+\s+\d+/.test(line)) {
+        logger.debug(`SPS parser: line ${i} has numbers but no fence keywords: "${line.substring(0, 50)}"`);
+      }
+      continue;
+    }
     
     logger.debug(`SPS parser: checking line ${i}: "${line}"`);
     
-    // Common units including OCR variations
-    const unitPattern = /^(ft|pc|ea|rl|rll|bag|set|box|pk|pkg|pcs|lf|each)$/i;
+    // Common units including OCR variations (oof, 0ft, oft, ri1, etc.)
+    const unitPattern = /^(ft|pc|ea|rl|rll|bag|set|box|pk|pkg|pcs|lf|each|oof|0ft|oft|ooft|ift|oea|0ea|ri1|rii|r11)$/i;
     
     // Pattern 1: qty qty qty unit description (full SPS format with backorder)
     // Example: "144 144 0 ft BLKVNL 4 x18 x SP40x8pc"
@@ -266,11 +282,66 @@ function parse(lines, profile = null) {
       }
     }
     
+    // Pattern 6: Orphaned product line (description only, no quantity prefix)
+    // OCR sometimes misses quantity columns - look for numbers in description or previous line
+    if (!line.match(/^\s*\d/)) {  // Line doesn't start with a number
+      // Check if this is a fence product description
+      const descMatch = line.match(/^((?:BLK|VNL|GALV|CHAIN|BLACK|GREEN|WHITE|GRN|WHT).{10,})/i);
+      if (descMatch) {
+        let desc = cleanDescription(descMatch[1]);
+        
+        // Try to extract quantity from embedded patterns like "50ft/rll" or "100ft/cl"
+        const embeddedQty = desc.match(/(\d+)(ft|pc|ea)\/(?:rll?|cl|roll)/i);
+        if (embeddedQty) {
+          const qty = toNum(embeddedQty[1]) || 0;
+          const unit = normalizeUnit(embeddedQty[2]);
+          
+          if (qty > 0) {
+            logger.info(`SPS Pattern 6 (embedded qty): ${qty} ${unit} - ${desc}`);
+            items.push({ sku: "", description: desc, quantity: qty, unit, price: 0, notes: "qty from description" });
+            continue;
+          }
+        }
+        
+        // Check previous line for orphaned quantities
+        if (i > 0) {
+          const prevLine = cleanLine(lines[i - 1]);
+          // Look for pattern like "50 50 0 ft" or just "50 50 ft"
+          const prevQty = prevLine.match(/^(\d+)\s+(\d+)\s*(?:\d+)?\s*(ft|pc|ea|rl)?$/i);
+          if (prevQty) {
+            const qty = toNum(prevQty[2]) || toNum(prevQty[1]) || 0;
+            const unit = normalizeUnit(prevQty[3] || inferUnitFromDesc(desc));
+            
+            if (qty > 0) {
+              logger.info(`SPS Pattern 6 (prev line qty): ${qty} ${unit} - ${desc}`);
+              items.push({ sku: "", description: desc, quantity: qty, unit, price: 0, notes: "" });
+              continue;
+            }
+          }
+        }
+        
+        // Last resort: flag for manual review with qty 0
+        logger.warn(`SPS Pattern 6: Found product but no quantity: ${desc.substring(0, 50)}...`);
+        // Don't add items without quantities - they need manual entry
+      }
+    }
+    
     if (items.length >= 200) break;
   }
   
   logger.info(`SPS parser found ${items.length} items`);
   return items;
+}
+
+/**
+ * Infer unit from description
+ */
+function inferUnitFromDesc(desc) {
+  if (!desc) return "ea";
+  if (/\d+ft\//i.test(desc) || /rll|roll|fabric|mesh|wire/i.test(desc)) return "ft";
+  if (/post|cap|arm|bracket|clamp|sleeve/i.test(desc)) return "ea";
+  if (/rail/i.test(desc)) return "ft";
+  return "ea";
 }
 
 module.exports = { parse };

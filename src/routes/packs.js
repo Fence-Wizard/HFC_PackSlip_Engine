@@ -21,6 +21,11 @@ function toApiModel(pack) {
     fileName: pack.file?.originalName || pack.file?.fileName || "pack-slip",
     uploadedAt: pack.createdAt,
     extractedText: pack.extractedText || "",
+    // File URL for displaying original document
+    fileUrl: pack.file?.fileName ? `/files/${pack.file.fileName}` : null,
+    fileMimeType: pack.file?.mimeType || null,
+    // Preview image URL (for PDFs rendered as images)
+    previewUrl: pack.previewFileName ? `/files/${pack.previewFileName}` : null,
     fields: {
       vendor: pack.metadata?.vendor || pack.vendorName || vendorProfile?.name || "",
       po: pack.metadata?.poOrJob || "",
@@ -94,6 +99,74 @@ router.post("/packs/:id/submit", async (req, res) => {
   } catch (err) {
     logger.warn("Webhook dispatch failed on /packs submit", { reqId, message: err?.message });
     return res.json({ ok: true, n8nStatus: "failed", slackStatus: "via n8n" });
+  }
+});
+
+/**
+ * Re-parse from user-edited text (no re-extraction from file)
+ * This allows users to fix OCR errors before parsing
+ */
+router.post("/packs/:id/reparse-text", async (req, res) => {
+  const reqId = req.id;
+  const pack = db.getPackSlip(req.params.id);
+  if (!pack) return res.status(404).json({ error: "Not found" });
+
+  const editedText = req.body?.text;
+  if (!editedText || typeof editedText !== "string") {
+    return res.status(400).json({ error: "Missing or invalid 'text' in request body" });
+  }
+
+  const newVendorId = req.body?.vendorId;
+
+  try {
+    // Determine vendor
+    let finalVendorId = newVendorId || pack.vendorId;
+    let vendorSource = pack.vendorSource || "none";
+    let vendorConfidence = pack.vendorConfidence || 0;
+    
+    if (newVendorId) {
+      vendorSource = "user";
+      vendorConfidence = 1.0;
+    } else if (!finalVendorId) {
+      // Try auto-detection on the edited text
+      const detected = detectVendor(editedText);
+      if (detected) {
+        finalVendorId = detected.id;
+        vendorSource = "auto";
+        vendorConfidence = 0.8;
+        logger.info("Auto-detected vendor from edited text", { reqId, vendorId: detected.id });
+      }
+    }
+    
+    // Get vendor profile for parsing
+    const vendorProfile = finalVendorId && finalVendorId !== "_manual" 
+      ? getVendorById(finalVendorId) 
+      : null;
+    
+    logger.info("Re-parsing from edited text", { reqId, textLength: editedText.length, vendorId: finalVendorId });
+    
+    const lineItems = parsePackSlip(editedText, vendorProfile);
+    const updated = db.updatePackSlip(pack.id, {
+      extractedText: editedText,
+      extractMeta: {
+        ...pack.extractMeta,
+        editedByUser: true,
+      },
+      vendorId: finalVendorId,
+      vendorSource,
+      vendorConfidence,
+      vendorName: vendorProfile?.name || null,
+      lineItems,
+      updatedAt: now(),
+      status: STATUSES.REVIEW,
+      errors: [],
+    });
+    
+    logger.info("Re-parse from text complete", { reqId, itemCount: lineItems.length });
+    return res.json(toApiModel(updated));
+  } catch (err) {
+    logger.error("Reparse from text failed", { reqId, message: err?.message, stack: err?.stack });
+    return res.status(500).json({ error: err?.message || "Reparse failed" });
   }
 });
 

@@ -58,7 +58,8 @@ async function extractText({ buffer, mimeType, fileName }, reqId) {
   return { 
     text: result.text || "(No text could be extracted)", 
     method: result.method || "unknown", 
-    pages: result.pageCount || 0 
+    pages: result.pageCount || 0,
+    previewImage: result.previewImage || null  // Pass through preview image for PDFs
   };
 }
 

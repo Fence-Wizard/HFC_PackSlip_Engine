@@ -76,15 +76,21 @@ const productKeywords = [
   // Slats
   "slat", "privacy slat", "winged slat",
   
-  // Colors/Coatings
-  "vnl", "vinyl", "blk", "black", "grn", "green", "wht", "white", "galv", "galvanized",
+  // Colors/Coatings (including common OCR errors)
+  "vnl", "vinyl", "blk", "bk", "black", "grn", "green", "wht", "white", "galv", "galvanized",
+  
+  // Wire selvedge types (common in SPS pack slips)
+  "kt", "kk", "tk",  // Knuckle/Twist combinations
+  "core",  // e.g., "11core", "13core"
+  "50ft/", "100ft/",  // Roll sizes
+  "rll", "rl",  // Roll abbreviations
   
   // Schedule Pipe
   "sp20", "sp40", "sch20", "sch40",
   
   // Sizes/Dimensions
   "1-3/8", "1-5/8", "1-7/8", "2-1/2", "2-3/8", "3-1/2", "4\"", "6\"", "8\"",
-  "2x9", "2x8", "2x11", "2x12",
+  "2x9", "2x8", "2x11", "2x12", "2a",
   "9ga", "11ga", "12ga", "12.5ga", "6ga",
 ];
 

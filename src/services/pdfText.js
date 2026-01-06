@@ -1,11 +1,45 @@
 /**
  * PDF text extraction with OCR fallback for scanned PDFs.
  * Uses pdf-parse v2.x for both text extraction AND page rendering.
+ * 
+ * Includes image preprocessing for better OCR accuracy:
+ * - Contrast enhancement
+ * - Noise reduction
+ * - Sharpening for text clarity
  */
 
 const logger = require("../config/logger");
+const sharp = require("sharp");
 
 let PDFParseClass = null;
+
+/**
+ * Preprocess image for better OCR accuracy
+ * Uses gentle enhancements that don't destroy thin characters like numbers
+ * @param {Buffer} imageBuffer - PNG image buffer
+ * @returns {Promise<Buffer>} - Processed image buffer
+ */
+async function preprocessImage(imageBuffer) {
+  try {
+    const processed = await sharp(imageBuffer)
+      // Convert to grayscale for better OCR
+      .grayscale()
+      // Gentle contrast enhancement (NOT normalize which can be too aggressive)
+      .linear(1.2, -20)  // Slightly increase contrast, darken midtones
+      // Gentle sharpen to improve text edges without destroying thin lines
+      .sharpen({ sigma: 0.8 })
+      // NO threshold - it destroys thin numerical characters!
+      // Output as high-quality PNG
+      .png({ compressionLevel: 1 })
+      .toBuffer();
+    
+    logger.debug(`Image preprocessed: ${imageBuffer.length} -> ${processed.length} bytes`);
+    return processed;
+  } catch (err) {
+    logger.warn("Image preprocessing failed, using original:", err?.message);
+    return imageBuffer;
+  }
+}
 
 /**
  * Load the PDFParse class from pdf-parse v2.x
@@ -30,9 +64,11 @@ function loadPdfParse() {
  * Extract text from a PDF buffer.
  * First tries native text extraction, then falls back to OCR if needed.
  * @param {Buffer} buffer - Node.js Buffer containing PDF data
- * @returns {Promise<{text: string, pageCount: number, method: string}>}
+ * @param {Object} options - Optional settings
+ * @param {Function} options.onPreviewImage - Callback with preview image buffer
+ * @returns {Promise<{text: string, pageCount: number, method: string, previewImage?: Buffer}>}
  */
-async function extractPdfText(buffer) {
+async function extractPdfText(buffer, options = {}) {
   if (!buffer || !Buffer.isBuffer(buffer)) {
     throw new Error("extractPdfText expected a Node Buffer");
   }
@@ -78,31 +114,52 @@ async function extractPdfText(buffer) {
     
     logger.info(`Generated ${screenshotResult.pages.length} page images for OCR`);
     
-    // OCR each page with optimized settings
+    // Save the first page as preview image (before preprocessing for cleaner display)
+    let previewImage = null;
+    if (screenshotResult.pages[0]?.data) {
+      previewImage = Buffer.from(screenshotResult.pages[0].data);
+      logger.info(`Preview image captured: ${Math.round(previewImage.length / 1024)} KB`);
+    }
+    
+    // OCR each page with optimized settings for table extraction
     const Tesseract = require("tesseract.js");
     const textParts = [];
     
     for (let i = 0; i < screenshotResult.pages.length; i++) {
-      const pageData = screenshotResult.pages[i].data;
+      let pageData = screenshotResult.pages[i].data;
       if (!pageData) {
         logger.warn(`Page ${i + 1} has no image data`);
         continue;
       }
       
-      // Log image size for debugging
-      const imgSize = pageData.length || pageData.byteLength || 0;
-      logger.info(`OCR page ${i + 1}: image size ${Math.round(imgSize / 1024)} KB`);
+      // Log original image size
+      const origSize = pageData.length || pageData.byteLength || 0;
+      logger.info(`OCR page ${i + 1}: original image size ${Math.round(origSize / 1024)} KB`);
+      
+      // Preprocess image for better OCR accuracy
+      try {
+        pageData = await preprocessImage(Buffer.from(pageData));
+        logger.info(`OCR page ${i + 1}: preprocessed image size ${Math.round(pageData.length / 1024)} KB`);
+      } catch (prepErr) {
+        logger.warn(`Image preprocessing failed for page ${i + 1}:`, prepErr?.message);
+      }
       
       try {
-        const { data: { text } } = await Tesseract.recognize(
-          pageData,
-          'eng',
-          { 
-            logger: () => {},
-            // Tesseract parameters for better table/document recognition
-            tessedit_pageseg_mode: '6', // Assume uniform block of text
-          }
-        );
+        // Create worker with optimized settings for tables
+        const worker = await Tesseract.createWorker('eng', 1, {
+          logger: () => {},
+        });
+        
+        // Set parameters for better table/column recognition
+        await worker.setParameters({
+          tessedit_pageseg_mode: '6',           // Assume uniform block of text
+          preserve_interword_spaces: '1',        // Keep spacing between columns
+          tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-/\'\"()[]|.,#:;@ ',
+        });
+        
+        const { data: { text } } = await worker.recognize(pageData);
+        await worker.terminate();
+        
         if (text?.trim()) {
           textParts.push(text.trim());
           // Log first 500 chars of each page for debugging
@@ -128,7 +185,8 @@ async function extractPdfText(buffer) {
     return {
       text: ocrText || "(No text could be extracted)",
       pageCount: screenshotResult.pages.length,
-      method: ocrText ? "ocr" : "ocr-empty"
+      method: ocrText ? "ocr" : "ocr-empty",
+      previewImage  // Include the rendered page image for display
     };
     
   } catch (err) {

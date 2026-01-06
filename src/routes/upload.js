@@ -1,5 +1,7 @@
 const express = require("express");
 const multer = require("multer");
+const fs = require("fs");
+const path = require("path");
 const logger = require("../config/logger");
 const { createPackSlip, STATUSES, now } = require("../models/PackSlip");
 const { toFileRecord, readFileBuffer } = require("../storage/files");
@@ -7,6 +9,7 @@ const db = require("../storage/db");
 const { extractText } = require("../services/extractText");
 const { parsePackSlip } = require("../services/parsePackSlip");
 const { detectVendor, getVendorById } = require("../config/vendors");
+const { config } = require("../config/env");
 
 const router = express.Router();
 
@@ -87,6 +90,19 @@ router.post("/upload", upload.single("file"), async (req, res, next) => {
       ? getVendorById(finalVendorId) 
       : null;
 
+    // Save preview image if available (for PDFs rendered to images)
+    let previewFileName = null;
+    if (extraction.previewImage) {
+      try {
+        previewFileName = `preview-${packSlip.id}.png`;
+        const previewPath = path.join(config.uploadDir, previewFileName);
+        fs.writeFileSync(previewPath, extraction.previewImage);
+        logger.info("Saved preview image", { reqId, previewFileName });
+      } catch (previewErr) {
+        logger.warn("Failed to save preview image", { reqId, error: previewErr?.message });
+      }
+    }
+
     db.updatePackSlip(packSlip.id, {
       status: STATUSES.EXTRACTED,
       extractedText: extraction.text,
@@ -94,6 +110,7 @@ router.post("/upload", upload.single("file"), async (req, res, next) => {
         method: extraction.method,
         pages: extraction.pages,
       },
+      previewFileName,  // Store preview image filename
       vendorId: finalVendorId,
       vendorSource,
       vendorConfidence,
