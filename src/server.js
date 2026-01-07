@@ -15,6 +15,15 @@ const errorHandler = require("./middleware/errorHandler");
 
 loadConfig();
 
+// Log configuration on startup (do not log sensitive URLs)
+logger.info("Config loaded", {
+  port: config.port,
+  baseUrl: config.baseUrl,
+  dataDir: config.dataDir,
+  uploadDir: config.uploadDir,
+  n8nWebhookConfigured: Boolean(config.n8nWebhookUrl),
+});
+
 // Ensure data directories exist so uploads and DB writes do not fail.
 fs.mkdirSync(config.dataDir, { recursive: true });
 fs.mkdirSync(config.uploadDir, { recursive: true });
