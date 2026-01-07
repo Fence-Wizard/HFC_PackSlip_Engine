@@ -1,4 +1,6 @@
 const express = require("express");
+const fs = require("fs");
+const path = require("path");
 const db = require("../storage/db");
 const { STATUSES, now } = require("../models/PackSlip");
 const { sendToN8n } = require("../services/webhook");
@@ -6,7 +8,38 @@ const { extractText } = require("../services/extractText");
 const { parsePackSlip } = require("../services/parsePackSlip");
 const { readFileBuffer } = require("../storage/files");
 const { getVendorById, detectVendor } = require("../config/vendors");
+const { config } = require("../config/env");
 const logger = require("../config/logger");
+
+/**
+ * Get the document image as a base64 data URI for Vision AI processing.
+ * Prefers the preview image (PNG render of PDF), falls back to original if it's an image.
+ */
+function getImageBase64(pack) {
+  try {
+    // First try the preview image (PNG render of PDF)
+    if (pack.previewFileName) {
+      const previewPath = path.join(config.uploadDir, pack.previewFileName);
+      if (fs.existsSync(previewPath)) {
+        const buffer = fs.readFileSync(previewPath);
+        const base64 = buffer.toString("base64");
+        return `data:image/png;base64,${base64}`;
+      }
+    }
+
+    // Fall back to original file if it's an image
+    if (pack.file?.storedPath && pack.file?.mimeType?.startsWith("image/")) {
+      const buffer = fs.readFileSync(pack.file.storedPath);
+      const base64 = buffer.toString("base64");
+      return `data:${pack.file.mimeType};base64,${base64}`;
+    }
+
+    return null;
+  } catch (err) {
+    logger.warn("Failed to read image for base64 encoding", { error: err?.message });
+    return null;
+  }
+}
 
 const router = express.Router();
 
@@ -84,16 +117,27 @@ router.post("/packs/:id/submit", async (req, res) => {
     errors: [],
   });
 
+  // Get the document image as base64 for Vision AI processing
+  const imageBase64 = getImageBase64(updated);
+  
   const payload = {
     id: updated.id,
     metadata: updated.metadata,
     lineItems: updated.lineItems,
     extractedText: updated.extractedText,
-    file: updated.file,
+    file: {
+      fileName: updated.file?.fileName,
+      originalName: updated.file?.originalName,
+      mimeType: updated.file?.mimeType,
+    },
     extractMeta: updated.extractMeta,
+    // Include the document image as base64 for n8n Vision AI processing
+    imageBase64,
   };
 
   try {
+    const hasImage = Boolean(imageBase64);
+    logger.info("Submitting to n8n", { reqId, hasImage, payloadSize: JSON.stringify(payload).length });
     await sendToN8n(payload, reqId);
     return res.json({ ok: true, n8nStatus: "sent", slackStatus: "via n8n" });
   } catch (err) {
