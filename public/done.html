@@ -17,7 +17,13 @@
           <div class="text-xs text-slate-500">Submission complete</div>
         </div>
       </div>
-      <a href="/upload.html" class="text-sm px-3 py-2 rounded-xl border border-slate-200 hover:bg-white">New upload</a>
+      <div class="flex items-center gap-4">
+        <!-- Dark Mode Toggle -->
+        <div class="theme-toggle">
+          <div class="theme-toggle-switch" id="themeToggle" role="switch" aria-checked="false" tabindex="0" title="Toggle dark mode"></div>
+        </div>
+        <a href="/upload.html" class="text-sm px-3 py-2 rounded-xl border border-slate-200 hover:bg-white">New upload</a>
+      </div>
     </div>
   </header>
 
@@ -50,7 +56,41 @@
     const id = params.get("id");
     document.getElementById("id").textContent = id || "(missing)";
     document.getElementById("backToReview").href = id ? `/review.html?id=${encodeURIComponent(id)}` : "/upload.html";
-    if (!id) toast("Missing id. If you refreshed, that’s okay—upload a new slip.", "warning", 6000);
+    if (!id) toast("Missing id. If you refreshed, that's okay—upload a new slip.", "warning", 6000);
+
+    // Dark mode toggle
+    const themeToggle = document.getElementById("themeToggle");
+    
+    function setTheme(dark) {
+      if (dark) {
+        document.documentElement.classList.add("dark");
+        themeToggle.setAttribute("aria-checked", "true");
+        localStorage.setItem("theme", "dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+        themeToggle.setAttribute("aria-checked", "false");
+        localStorage.setItem("theme", "light");
+      }
+    }
+    
+    // Initialize theme from localStorage or system preference
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "dark" || (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+      setTheme(true);
+    }
+    
+    themeToggle.addEventListener("click", () => {
+      const isDark = document.documentElement.classList.contains("dark");
+      setTheme(!isDark);
+    });
+    
+    themeToggle.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        const isDark = document.documentElement.classList.contains("dark");
+        setTheme(!isDark);
+      }
+    });
   </script>
 </body>
 </html>

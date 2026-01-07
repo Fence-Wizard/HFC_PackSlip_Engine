@@ -18,7 +18,14 @@
           <div class="text-xs text-slate-500">Upload → Review → Submit</div>
         </div>
       </div>
-      <a href="/upload.html" class="text-sm text-slate-600 hover:text-slate-900">New upload</a>
+      <div class="flex items-center gap-4">
+        <!-- Dark Mode Toggle -->
+        <div class="theme-toggle">
+          <span class="theme-toggle-label hidden sm:inline">Dark Mode</span>
+          <div class="theme-toggle-switch" id="themeToggle" role="switch" aria-checked="false" tabindex="0"></div>
+        </div>
+        <a href="/upload.html" class="text-sm text-slate-600 hover:text-slate-900">New upload</a>
+      </div>
     </div>
   </header>
 
@@ -246,6 +253,40 @@
     });
 
     setFile(null);
+
+    // Dark mode toggle
+    const themeToggle = document.getElementById("themeToggle");
+    
+    function setTheme(dark) {
+      if (dark) {
+        document.documentElement.classList.add("dark");
+        themeToggle.setAttribute("aria-checked", "true");
+        localStorage.setItem("theme", "dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+        themeToggle.setAttribute("aria-checked", "false");
+        localStorage.setItem("theme", "light");
+      }
+    }
+    
+    // Initialize theme from localStorage or system preference
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "dark" || (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+      setTheme(true);
+    }
+    
+    themeToggle.addEventListener("click", () => {
+      const isDark = document.documentElement.classList.contains("dark");
+      setTheme(!isDark);
+    });
+    
+    themeToggle.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        const isDark = document.documentElement.classList.contains("dark");
+        setTheme(!isDark);
+      }
+    });
   </script>
 </body>
 </html>
